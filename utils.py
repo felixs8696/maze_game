@@ -22,3 +22,13 @@ def ask_for_options(objects):
     print(f"{objects_options}")
     index = input("Please choose one of the above options:")
     return index
+
+
+def create_placeholder_matrix(width: int, height: int, placeholder):
+    matrix = []
+    for i in range(width):
+        matrix_row = []
+        for j in range(height):
+            matrix_row.append(placeholder)
+        matrix.append(matrix_row)
+    return matrix

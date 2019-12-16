@@ -1,5 +1,5 @@
-from .move import Move
-from .datatypes import Direction
+from move import Move
+from datatypes import Direction
 
 
 class Movement(Move):

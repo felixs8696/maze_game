@@ -1,12 +1,10 @@
 import random
 
 from abc import ABC, abstractmethod
-from typing import List
 
-from .move import Move
-from .utils import get_yes_or_no_response, response_is_yes
-from .datatypes import Direction
-from .items import Item
+from move import Move
+from utils import get_yes_or_no_response, response_is_yes
+from datatypes import Direction
 
 
 class Action(Move):
@@ -18,7 +16,7 @@ class Action(Move):
 
 class BuyItem(Action):
 
-    def __init__(self, items: List[Item], is_mandatory=False):
+    def __init__(self, items, is_mandatory=False):
         super().__init__(is_mandatory)
         self.items = items
 
@@ -41,12 +39,12 @@ class BuyItem(Action):
 
 class Teleport(Action):
 
-    def __init__(self, exit_portal, is_mandatory=False):
+    def __init__(self, exit_location, is_mandatory=False):
         super().__init__(is_mandatory)
-        self.exit_portal = exit_portal
+        self.exit_location = exit_location
 
     def affect_player(self, player, **kwargs):
-        player.teleport_to(self.exit_portal.location)
+        player.teleport_to(self.exit_location)
 
     def description(self):
         return f"You have been teleported by a portal."
@@ -91,6 +89,15 @@ class DropItem(Action):
 
     def description(self):
         return f"You drop your item."
+
+
+class AcquireTreasure(Action):
+
+    def affect_player(self, player, **kwargs):
+        player.acquire_treasure()
+
+    def description(self):
+        return f"You drop your treasure."
 
 
 class DropTreasure(Action):

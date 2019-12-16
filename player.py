@@ -1,17 +1,16 @@
-from .datatypes import StatusType, ItemType, TreasureType, PortalType, Direction, MoveType
-from .move import Move
-from .movement import Movement
-from .tiles import Tile
-from .location import Location
-from .utils import ask_for_options
+from datatypes import StatusType, ItemType, TreasureType, PortalType, Direction, MoveType
+from move import Move
+from movement import Movement
+from tiles import Tile
+from location import Location
+from utils import ask_for_options
 
-from .exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
+from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
 
 class Player:
-    def __init__(self, initial_location: Location, name: str, unique_id):
+    def __init__(self, initial_location: Location, name: str):
         self.name = name
-        self.id = unique_id
         self.status = StatusType.HEALTHY
         self.item = None
         self.treasure = None

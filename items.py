@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from .actions import ShootBullet, HealPlayer, DoNothing
-from .datatypes import Direction
+from actions import ShootBullet, Heal, DoNothing
+from datatypes import Direction
 
 
 class Item(ABC):
@@ -24,7 +24,7 @@ class FirstAidKit(Item):
 
     @staticmethod
     def get_actions():
-        return [HealPlayer()]
+        return [Heal()]
 
 
 class PileOfJunk(Item):

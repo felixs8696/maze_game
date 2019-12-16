@@ -1,10 +1,11 @@
+import numpy as np
 import random
 
 from typing import List
 
-from .board import Board
-from .player import Player
-from .movement import Movement
+from board import Board
+from player import Player
+from movement import Movement
 
 
 class Game:
@@ -13,6 +14,9 @@ class Game:
         self.players = self._randomize_player_order(players)
         self.active_player_index = 0
         self.game_over = False
+
+    def display_board(self):
+        print(np.array(self.board.grid))
 
     @staticmethod
     def _randomize_player_order(players):

@@ -45,3 +45,27 @@ class Direction(Enum):
 class MoveType(Enum):
     ACTION = 1
     MOVEMENT = 2
+
+
+class TileCategories(Enum):
+    STATIC = 1
+    DYNAMIC = 2
+
+
+class TileType(Enum):
+    SAFE = 1
+    MARSH = 2
+    RIVER = 3
+    HOSPITAL = 4
+    SHOP = 5
+    A_PORTAL = 6
+    AB_PORTAL = 7
+    ABC_PORTAL = 8
+    TREASURE = 9
+
+
+class BorderWallType(Enum):
+    LEFT = 1
+    RIGHT = 2
+    UP = 3
+    DOWN = 4
