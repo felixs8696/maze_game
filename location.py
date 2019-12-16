@@ -28,24 +28,24 @@ class Location:
         self.teleport(self.next_location(direction))
 
     def in_bounds(self, board_height: int, board_width: int):
-        return 0 < self.x < board_width and 0 < self.y < board_height
+        return 0 <= self.x < board_width and 0 <= self.y < board_height
 
     def next_location(self, direction: Direction):
         if direction == Direction.UP:
-            y = self.y + 1
-            x = self.x
+            x_delta = 0
+            y_delta = 1
         elif direction == Direction.DOWN:
-            y = self.y - 1
-            x = self.x
+            x_delta = 0
+            y_delta = -1
         elif direction == Direction.RIGHT:
-            x = self.x + 1
-            y = self.y
+            x_delta = 1
+            y_delta = 0
         elif direction == Direction.LEFT:
-            x = self.x - 1
-            y = self.y
+            x_delta = -1
+            y_delta = 0
         else:
             raise ValueError(f"Invalid direction: {direction}")
-        return Location(x, y)
+        return Location(self.x + x_delta, self.y + y_delta)
 
     def neighbors(self, board_height: int, board_width: int):
         candidate_neighbors = [Location(self.x + 1, self.y),
@@ -53,6 +53,7 @@ class Location:
                                Location(self.x, self.y + 1),
                                Location(self.x, self.y - 1)]
         random.shuffle(candidate_neighbors)
+
         for candidate_neighbor in candidate_neighbors:
             if candidate_neighbor.in_bounds(board_height=board_height, board_width=board_width):
                 yield candidate_neighbor

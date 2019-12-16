@@ -135,6 +135,8 @@ class TileFactory:
 
     @staticmethod
     def create_static_tile(tile_type: TileType, location: Location):
+        if tile_type == TileType.SAFE:
+            return Safe(location=location)
         if tile_type == TileType.MARSH:
             return Marsh(location=location)
         if tile_type == TileType.RIVER:
@@ -185,7 +187,7 @@ def _get_river_start_tile(board_height: int, board_width: int):
     else:
         x = random.choice([0, max_x_coordinate])
         y = random.choice(range(board_height))
-        if y == max_x_coordinate:
+        if x == max_x_coordinate:
             init_direction = Direction.LEFT
         else:
             init_direction = Direction.RIGHT
@@ -199,53 +201,39 @@ def _get_possible_river_paths(max_river_length: int, max_num_turns: int, board_h
     possible_directions = [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN]
 
     river_start_tile = _get_river_start_tile(board_height=board_height, board_width=board_width)
+    # print(f"river_start_tile: {river_start_tile}")
     queue.append(([river_start_tile], max_num_turns))
 
     while len(queue) != 0:
         river_path, remaining_num_turns = queue.pop(0)
-        print(f"Remaining num turns: {remaining_num_turns}")
-        print(f"Investigating river_path ({len(river_path)}) ({river_path[0].location}): {[str(river_tile) for river_tile in river_path]}")
+        # print(f"Investigating river_path ({len(river_path)}) ({river_path[0].location}): {[str(river_tile)
+        # for river_tile in river_path]}")
         if len(river_path) == max_river_length:
             if _river_tile_exits_wall(river_path[-1], board_height=board_height, board_width=board_width):
-                print(f"Found river.")
                 return [river_path]
-                # valid_river_paths.append(river_path)
         else:
             last_river_tile = river_path[-1]
             next_river_tile_location = last_river_tile.location.next_location(last_river_tile.direction)
 
-            for neighbor_tile_location in next_river_tile_location.neighbors(board_height=board_height,
-                                                                             board_width=board_width):
-                river_tile_locations = [river_tile.location for river_tile in river_path]
-                if neighbor_tile_location not in river_tile_locations:
-                    change_direction = True
-                    if remaining_num_turns <= 0 or random.random() < 0.5:
-                        change_direction = False
-
-                    if not change_direction:
-                        if _can_add_river_tile_in_this_direction(location=neighbor_tile_location,
-                                                                 direction=last_river_tile.direction,
-                                                                 river_tiles=river_path, board_height=board_width,
-                                                                 board_width=board_width):
-                            neighbor_river_tile = River(location=neighbor_tile_location,
-                                                        direction=last_river_tile.direction)
-                            new_river_path = river_path.copy()
-                            new_river_path.append(neighbor_river_tile)
-                            queue.append((new_river_path, remaining_num_turns))
-                    else:
-                        for direction in possible_directions:
-                            if direction != last_river_tile.direction:
-                                if _can_add_river_tile_in_this_direction(location=neighbor_tile_location,
-                                                                         direction=direction,
-                                                                         river_tiles=river_path,
-                                                                         board_height=board_width,
-                                                                         board_width=board_width):
-                                    neighbor_river_tile = River(location=neighbor_tile_location, direction=direction)
-                                    new_river_path = river_path.copy()
-                                    new_river_path.append(neighbor_river_tile)
+            if next_river_tile_location.in_bounds(board_height=board_height, board_width=board_width):
+                for direction in random.sample(possible_directions, len(possible_directions)):
+                    if _can_add_river_tile_in_this_direction(location=next_river_tile_location,
+                                                             direction=direction,
+                                                             river_tiles=river_path,
+                                                             board_height=board_width,
+                                                             board_width=board_width):
+                        neighbor_river_tile = River(location=next_river_tile_location, direction=direction)
+                        new_river_path = river_path + [neighbor_river_tile]
+                        if max_num_turns >= 0:
+                            if direction == last_river_tile.direction:
+                                queue.append((new_river_path, remaining_num_turns))
+                            else:
+                                if not remaining_num_turns <= 0:
                                     queue.append((new_river_path, remaining_num_turns - 1))
+                        else:
+                            queue.append((new_river_path, remaining_num_turns))
 
-    print(f"Did not find river.")
+    print(f"Did not find valid river.")
     return valid_river_paths
 
 
@@ -253,9 +241,9 @@ def _can_add_river_tile_in_this_direction(location: Location, direction: Directi
                                           board_height: int, board_width: int):
     river_tile_locations = [river_tile.location for river_tile in river_tiles]
     candidate_next_river_tile_location = location.next_location(direction=direction)
-    if candidate_next_river_tile_location.in_bounds(board_height=board_height, board_width=board_width):
-        if candidate_next_river_tile_location not in river_tile_locations:
-            return True
+    # if candidate_next_river_tile_location.in_bounds(board_height=board_height, board_width=board_width):
+    if candidate_next_river_tile_location not in river_tile_locations:
+        return True
     return False
 
 

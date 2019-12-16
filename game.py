@@ -16,7 +16,12 @@ class Game:
         self.game_over = False
 
     def display_board(self):
-        print(np.array(self.board.grid))
+        for y in range(self.board.height - 1, -1, -1):
+            row = []
+            for x in range(self.board.width):
+                row.append(str(self.board.grid[x][y]))
+            print(row)
+        # print(np.array(self.board.grid))
 
     @staticmethod
     def _randomize_player_order(players):
