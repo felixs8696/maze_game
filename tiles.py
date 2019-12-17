@@ -8,6 +8,7 @@ from datatypes import PortalType, Direction, BorderWallType
 from actions import AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
 from location import Location
 from datatypes import TileType
+from constants import *
 
 
 class Tile(ABC):
@@ -35,7 +36,7 @@ class Safe(Tile):
         self._actions = [DoNothing(is_mandatory=True)]
 
     def __str__(self):
-        return '_'
+        return SAFE_TILE_DOT
 
     def description(self):
         return f"You are safe."

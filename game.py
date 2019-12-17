@@ -6,7 +6,8 @@ from typing import List
 from board import Board
 from player import Player
 from movement import Movement
-
+from datatypes import Direction
+from constants import *
 
 class Game:
     def __init__(self, board: Board, players: List[Player]):
@@ -16,12 +17,51 @@ class Game:
         self.game_over = False
 
     def display_board(self):
+        exit_locations = [ex.location for ex in self.board.exits]
+        exit_loc_to_dir_map = {}
+        for ex in self.board.exits:
+            exit_loc_to_dir_map[ex.location] = ex.direction
+
+        print(TOP_LEFT_CORNER, end=" ")
+        for x in range(self.board.width):
+            if self.board.grid[x][self.board.height - 1].location not in exit_locations:
+                print(HIGH_HORIZONTAL_LINE, end=" ")
+            else:
+                if exit_loc_to_dir_map[self.board.grid[x][self.board.height - 1].location] == Direction.UP:
+                    print(EXIT_UP, end=" ")
+                else:
+                    print(HIGH_HORIZONTAL_LINE, end=" ")
+        print(TOP_RIGHT_CORNER, end=" ")
+        print()
         for y in range(self.board.height - 1, -1, -1):
-            row = []
+            if self.board.grid[0][y].location not in exit_locations:
+                print(VERTICAL_LINE, end =" ")
+            else:
+                if exit_loc_to_dir_map[self.board.grid[0][y].location] == Direction.LEFT:
+                    print(EXIT_LEFT, end=" ")
+                else:
+                    print(VERTICAL_LINE, end=" ")
             for x in range(self.board.width):
-                row.append(str(self.board.grid[x][y]))
-            print(row)
-        # print(np.array(self.board.grid))
+                print(str(self.board.grid[x][y]), end =" ")
+            if self.board.grid[self.board.width - 1][y].location not in exit_locations:
+                print(VERTICAL_LINE, end =" ")
+            else:
+                if exit_loc_to_dir_map[self.board.grid[self.board.width - 1][y].location] == Direction.RIGHT:
+                    print(EXIT_RIGHT, end=" ")
+                else:
+                    print(VERTICAL_LINE, end=" ")
+            print()
+        print(BOTTOM_LEFT_CORNER, end =" ")
+        for x in range(self.board.width):
+            if self.board.grid[x][0].location not in exit_locations:
+                print(LOW_HORIZONTAL_LINE, end=" ")
+            else:
+                if exit_loc_to_dir_map[self.board.grid[x][0].location] == Direction.DOWN:
+                    print(EXIT_DOWN, end=" ")
+                else:
+                    print(LOW_HORIZONTAL_LINE, end=" ")
+        print(BOTTOM_RIGHT_CORNER, end=" ")
+        print()
 
     @staticmethod
     def _randomize_player_order(players):
