@@ -65,7 +65,9 @@ class Game:
         wall_row = [VERTICAL_WALL]
         for x in range(self.board.width):
             adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
-            if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+            rev_adjacent_locations = (self.board.grid[x][y + 1].location, self.board.grid[x][y].location)
+            if adjacent_locations in inner_wall_adj_loc_to_wall_map or \
+                    rev_adjacent_locations in inner_wall_adj_loc_to_wall_map:
                 wall_row.append(HORIZONTAL_WALL)
             else:
                 wall_row.append(EMPTY)
@@ -97,7 +99,9 @@ class Game:
             grid_row.append(str(self.board.grid[x][y]))
             if x < self.board.width - 1:
                 adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x + 1][y].location)
-                if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+                rev_adjacent_locations = (self.board.grid[x + 1][y].location, self.board.grid[x][y].location)
+                if adjacent_locations in inner_wall_adj_loc_to_wall_map or \
+                        rev_adjacent_locations in inner_wall_adj_loc_to_wall_map:
                     grid_row.append(VERTICAL_WALL)
                 else:
                     grid_row.append(EMPTY)
@@ -107,14 +111,16 @@ class Game:
         return grid_row
 
     def _grid_middle_rows(self, inner_wall_adj_loc_to_wall_map, exit_loc_to_dir_map, exit_locations):
-        grid_rows = []
+        wall_rows = []
+        tile_rows = []
         for y in range(self.board.height - 1, -1, -1):
             if y < self.board.height - 1:
-                grid_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
-            grid_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                wall_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
+            tile_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
                                                    exit_locations=exit_locations,
                                                    inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map, y=y))
-        return grid_rows
+        assert len(tile_rows) - 1 == len(wall_rows)
+        return tile_rows, wall_rows
 
     def display_board(self):
         exit_locations = self._get_exit_locations()
@@ -123,12 +129,19 @@ class Game:
 
         grid_rows = []
         top_row = self._grid_top_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
-        middle_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
-                                             exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                             exit_locations=exit_locations)
+        tile_rows, wall_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
+                                                      exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                      exit_locations=exit_locations)
         bottom_row = self._grid_bottom_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
         grid_rows.append(top_row)
+        
+        middle_rows = []
+        for i in range(len(wall_rows)):
+            middle_rows.append(tile_rows[i])
+            middle_rows.append(wall_rows[i])
+        middle_rows.append(tile_rows[-1])
         grid_rows.extend(middle_rows)
+
         grid_rows.append(bottom_row)
 
         for row in grid_rows:
