@@ -1,3 +1,4 @@
+import numpy as np
 import random
 
 from typing import List
@@ -110,17 +111,39 @@ class Game:
         grid_row.append(right_wall_or_exit)
         return grid_row
 
+    @staticmethod
+    def _optimize_wall_cross_sections(grid_middle_rows):
+        mirrored_grid_middle_rows = grid_middle_rows[::-1]
+        height = len(mirrored_grid_middle_rows)
+        width = len(mirrored_grid_middle_rows[0])
+        for y in range(height - 2, -1, -2):
+            for x in range(2, width - 2, 2):
+                assert mirrored_grid_middle_rows[y][x] == EMPTY
+                up = mirrored_grid_middle_rows[y + 1][x] == VERTICAL_WALL
+                down = mirrored_grid_middle_rows[y - 1][x] == VERTICAL_WALL
+                left = mirrored_grid_middle_rows[y][x - 1] == HORIZONTAL_WALL
+                right = mirrored_grid_middle_rows[y][x + 1] == HORIZONTAL_WALL
+
+                cross_section = WALL_CROSS_SECTION_MAP.get((up, down, left, right))
+                if cross_section is None:
+                    cross_section = EMPTY
+                mirrored_grid_middle_rows[y][x] = cross_section
+        unmirrored_grid_middle_rows = mirrored_grid_middle_rows[::-1]
+        return unmirrored_grid_middle_rows
+
     def _grid_middle_rows(self, inner_wall_adj_loc_to_wall_map, exit_loc_to_dir_map, exit_locations):
-        wall_rows = []
-        tile_rows = []
+        middle_rows = []
         for y in range(self.board.height - 1, -1, -1):
             if y < self.board.height - 1:
-                wall_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
-            tile_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                                   exit_locations=exit_locations,
-                                                   inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map, y=y))
-        assert len(tile_rows) - 1 == len(wall_rows)
-        return tile_rows, wall_rows
+                middle_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
+            middle_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                     exit_locations=exit_locations,
+                                                     inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
+                                                     y=y))
+
+        middle_rows = self._optimize_wall_cross_sections(middle_rows)
+
+        return middle_rows
 
     def display_board(self):
         exit_locations = self._get_exit_locations()
@@ -129,19 +152,12 @@ class Game:
 
         grid_rows = []
         top_row = self._grid_top_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
-        tile_rows, wall_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
-                                                      exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                                      exit_locations=exit_locations)
+        middle_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
+                                             exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                             exit_locations=exit_locations)
         bottom_row = self._grid_bottom_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
         grid_rows.append(top_row)
-        
-        middle_rows = []
-        for i in range(len(wall_rows)):
-            middle_rows.append(tile_rows[i])
-            middle_rows.append(wall_rows[i])
-        middle_rows.append(tile_rows[-1])
         grid_rows.extend(middle_rows)
-
         grid_rows.append(bottom_row)
 
         for row in grid_rows:

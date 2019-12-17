@@ -13,5 +13,3 @@ if __name__ == '__main__':
     #            Player(initial_location=random_safe_locations.pop(), name='Alice')]
     game = Game(board=board, players=players)
     game.display_board()
-    print(len(board.inner_walls))
-    print(np.array([str(wall) for wall in board.inner_walls]))
