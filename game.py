@@ -1,4 +1,3 @@
-import numpy as np
 import random
 
 from typing import List
@@ -22,44 +21,70 @@ class Game:
         for ex in self.board.exits:
             exit_loc_to_dir_map[ex.location] = ex.direction
 
+        inner_wall_adj_loc_to_wall_map = {}
+        for wall in self.board.inner_walls:
+            inner_wall_adj_loc_to_wall_map[wall.adjacent_locations] = wall
+
         print(TOP_LEFT_CORNER, end=" ")
         for x in range(self.board.width):
             if self.board.grid[x][self.board.height - 1].location not in exit_locations:
-                print(HIGH_HORIZONTAL_LINE, end=" ")
+                print(HORIZONTAL_WALL, end=" ")
             else:
                 if exit_loc_to_dir_map[self.board.grid[x][self.board.height - 1].location] == Direction.UP:
                     print(EXIT_UP, end=" ")
                 else:
-                    print(HIGH_HORIZONTAL_LINE, end=" ")
+                    print(HORIZONTAL_WALL, end=" ")
+            if x < self.board.width - 1:
+                print(HORIZONTAL_WALL, end=" ")
         print(TOP_RIGHT_CORNER, end=" ")
         print()
         for y in range(self.board.height - 1, -1, -1):
+            if y < self.board.width - 1:
+                print(VERTICAL_WALL, end=" ")
+                for x in range(self.board.width):
+                    adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
+                    if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+                        print(HORIZONTAL_WALL, end=" ")
+                    else:
+                        print(EMPTY, end=" ")
+                    if x < self.board.width - 1:
+                        print(EMPTY, end=" ")
+                print(VERTICAL_WALL, end =" ")
+                print()
             if self.board.grid[0][y].location not in exit_locations:
-                print(VERTICAL_LINE, end =" ")
+                print(VERTICAL_WALL, end =" ")
             else:
                 if exit_loc_to_dir_map[self.board.grid[0][y].location] == Direction.LEFT:
                     print(EXIT_LEFT, end=" ")
                 else:
-                    print(VERTICAL_LINE, end=" ")
+                    print(VERTICAL_WALL, end=" ")
             for x in range(self.board.width):
                 print(str(self.board.grid[x][y]), end =" ")
+                if x < self.board.width - 1:
+                    adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x + 1][y].location)
+                    if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+                        print(VERTICAL_WALL, end =" ")
+                    else:
+                        print(EMPTY, end=" ")
             if self.board.grid[self.board.width - 1][y].location not in exit_locations:
-                print(VERTICAL_LINE, end =" ")
+                print(VERTICAL_WALL, end =" ")
             else:
                 if exit_loc_to_dir_map[self.board.grid[self.board.width - 1][y].location] == Direction.RIGHT:
                     print(EXIT_RIGHT, end=" ")
                 else:
-                    print(VERTICAL_LINE, end=" ")
+                    print(VERTICAL_WALL, end=" ")
             print()
         print(BOTTOM_LEFT_CORNER, end =" ")
         for x in range(self.board.width):
             if self.board.grid[x][0].location not in exit_locations:
-                print(LOW_HORIZONTAL_LINE, end=" ")
+                print(HORIZONTAL_WALL, end=" ")
             else:
                 if exit_loc_to_dir_map[self.board.grid[x][0].location] == Direction.DOWN:
                     print(EXIT_DOWN, end=" ")
                 else:
-                    print(LOW_HORIZONTAL_LINE, end=" ")
+                    print(HORIZONTAL_WALL, end=" ")
+            if x < self.board.width - 1:
+                print(HORIZONTAL_WALL, end=" ")
         print(BOTTOM_RIGHT_CORNER, end=" ")
         print()
 

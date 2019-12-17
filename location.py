@@ -54,6 +54,8 @@ class Location:
                                Location(self.x, self.y - 1)]
         random.shuffle(candidate_neighbors)
 
+        valid_neighbors = []
         for candidate_neighbor in candidate_neighbors:
             if candidate_neighbor.in_bounds(board_height=board_height, board_width=board_width):
-                yield candidate_neighbor
+                valid_neighbors.append(candidate_neighbor)
+        return valid_neighbors
