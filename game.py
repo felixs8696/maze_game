@@ -8,6 +8,7 @@ from movement import Movement
 from datatypes import Direction
 from constants import *
 
+
 class Game:
     def __init__(self, board: Board, players: List[Player]):
         self.board = board
@@ -15,78 +16,125 @@ class Game:
         self.active_player_index = 0
         self.game_over = False
 
-    def display_board(self):
-        exit_locations = [ex.location for ex in self.board.exits]
+    def _get_exit_locations(self):
+        return [ex.location for ex in self.board.exits]
+
+    def _get_exit_loc_to_dir_map(self):
         exit_loc_to_dir_map = {}
         for ex in self.board.exits:
             exit_loc_to_dir_map[ex.location] = ex.direction
+        return exit_loc_to_dir_map
 
+    def _get_inner_wall_adj_loc_to_wall_map(self):
         inner_wall_adj_loc_to_wall_map = {}
         for wall in self.board.inner_walls:
             inner_wall_adj_loc_to_wall_map[wall.adjacent_locations] = wall
+        return inner_wall_adj_loc_to_wall_map
 
-        print(TOP_LEFT_CORNER, end=" ")
+    def _grid_top_row(self, exit_loc_to_dir_map, exit_locations):
+        top_row = [TOP_LEFT_CORNER]
         for x in range(self.board.width):
             if self.board.grid[x][self.board.height - 1].location not in exit_locations:
-                print(HORIZONTAL_WALL, end=" ")
+                top_row.append(HORIZONTAL_WALL)
             else:
                 if exit_loc_to_dir_map[self.board.grid[x][self.board.height - 1].location] == Direction.UP:
-                    print(EXIT_UP, end=" ")
+                    top_row.append(EXIT_UP)
                 else:
-                    print(HORIZONTAL_WALL, end=" ")
+                    top_row.append(HORIZONTAL_WALL)
             if x < self.board.width - 1:
-                print(HORIZONTAL_WALL, end=" ")
-        print(TOP_RIGHT_CORNER, end=" ")
-        print()
-        for y in range(self.board.height - 1, -1, -1):
-            if y < self.board.width - 1:
-                print(VERTICAL_WALL, end=" ")
-                for x in range(self.board.width):
-                    adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
-                    if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
-                        print(HORIZONTAL_WALL, end=" ")
-                    else:
-                        print(EMPTY, end=" ")
-                    if x < self.board.width - 1:
-                        print(EMPTY, end=" ")
-                print(VERTICAL_WALL, end =" ")
-                print()
-            if self.board.grid[0][y].location not in exit_locations:
-                print(VERTICAL_WALL, end =" ")
-            else:
-                if exit_loc_to_dir_map[self.board.grid[0][y].location] == Direction.LEFT:
-                    print(EXIT_LEFT, end=" ")
-                else:
-                    print(VERTICAL_WALL, end=" ")
-            for x in range(self.board.width):
-                print(str(self.board.grid[x][y]), end =" ")
-                if x < self.board.width - 1:
-                    adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x + 1][y].location)
-                    if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
-                        print(VERTICAL_WALL, end =" ")
-                    else:
-                        print(EMPTY, end=" ")
-            if self.board.grid[self.board.width - 1][y].location not in exit_locations:
-                print(VERTICAL_WALL, end =" ")
-            else:
-                if exit_loc_to_dir_map[self.board.grid[self.board.width - 1][y].location] == Direction.RIGHT:
-                    print(EXIT_RIGHT, end=" ")
-                else:
-                    print(VERTICAL_WALL, end=" ")
-            print()
-        print(BOTTOM_LEFT_CORNER, end =" ")
+                top_row.append(HORIZONTAL_WALL)
+        top_row.append(TOP_RIGHT_CORNER)
+        return top_row
+
+    def _grid_bottom_row(self, exit_loc_to_dir_map, exit_locations):
+        bottom_row = [BOTTOM_LEFT_CORNER]
         for x in range(self.board.width):
             if self.board.grid[x][0].location not in exit_locations:
-                print(HORIZONTAL_WALL, end=" ")
+                bottom_row.append(HORIZONTAL_WALL)
             else:
                 if exit_loc_to_dir_map[self.board.grid[x][0].location] == Direction.DOWN:
-                    print(EXIT_DOWN, end=" ")
+                    bottom_row.append(EXIT_DOWN)
                 else:
-                    print(HORIZONTAL_WALL, end=" ")
+                    bottom_row.append(HORIZONTAL_WALL)
             if x < self.board.width - 1:
-                print(HORIZONTAL_WALL, end=" ")
-        print(BOTTOM_RIGHT_CORNER, end=" ")
-        print()
+                bottom_row.append(HORIZONTAL_WALL)
+        bottom_row.append(BOTTOM_RIGHT_CORNER)
+        return bottom_row
+
+    def _single_wall_row(self, inner_wall_adj_loc_to_wall_map, y):
+        wall_row = [VERTICAL_WALL]
+        for x in range(self.board.width):
+            adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
+            if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+                wall_row.append(HORIZONTAL_WALL)
+            else:
+                wall_row.append(EMPTY)
+            if x < self.board.width - 1:
+                wall_row.append(EMPTY)
+        wall_row.append(VERTICAL_WALL)
+        return wall_row
+
+    def _left_wall_or_exit(self, exit_loc_to_dir_map, exit_locations, y):
+        if self.board.grid[0][y].location in exit_locations and \
+                exit_loc_to_dir_map[self.board.grid[0][y].location] == Direction.LEFT:
+            return EXIT_LEFT
+        else:
+            return VERTICAL_WALL
+
+    def _right_wall_or_exit(self, exit_loc_to_dir_map, exit_locations, y):
+        if self.board.grid[self.board.width - 1][y].location in exit_locations and \
+                exit_loc_to_dir_map[self.board.grid[self.board.width - 1][y].location] == Direction.RIGHT:
+            return EXIT_RIGHT
+        else:
+            return VERTICAL_WALL
+
+    def _single_grid_row(self, exit_loc_to_dir_map, exit_locations, inner_wall_adj_loc_to_wall_map, y):
+        grid_row = []
+        left_wall_or_exit = self._left_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                    exit_locations=exit_locations, y=y)
+        grid_row.append(left_wall_or_exit)
+        for x in range(self.board.width):
+            grid_row.append(str(self.board.grid[x][y]))
+            if x < self.board.width - 1:
+                adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x + 1][y].location)
+                if adjacent_locations in inner_wall_adj_loc_to_wall_map.keys():
+                    grid_row.append(VERTICAL_WALL)
+                else:
+                    grid_row.append(EMPTY)
+        right_wall_or_exit = self._right_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                      exit_locations=exit_locations, y=y)
+        grid_row.append(right_wall_or_exit)
+        return grid_row
+
+    def _grid_middle_rows(self, inner_wall_adj_loc_to_wall_map, exit_loc_to_dir_map, exit_locations):
+        grid_rows = []
+        for y in range(self.board.height - 1, -1, -1):
+            if y < self.board.height - 1:
+                grid_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
+            grid_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                   exit_locations=exit_locations,
+                                                   inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map, y=y))
+        return grid_rows
+
+    def display_board(self):
+        exit_locations = self._get_exit_locations()
+        exit_loc_to_dir_map = self._get_exit_loc_to_dir_map()
+        inner_wall_adj_loc_to_wall_map = self._get_inner_wall_adj_loc_to_wall_map()
+
+        grid_rows = []
+        top_row = self._grid_top_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
+        middle_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
+                                             exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                             exit_locations=exit_locations)
+        bottom_row = self._grid_bottom_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
+        grid_rows.append(top_row)
+        grid_rows.extend(middle_rows)
+        grid_rows.append(bottom_row)
+
+        for row in grid_rows:
+            for block in row:
+                print(block, end=" ")
+            print()
 
     @staticmethod
     def _randomize_player_order(players):

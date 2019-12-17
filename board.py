@@ -98,13 +98,18 @@ class Board:
         inner_walls = set()
         river_locations = [river_tile.location for river_tile in river_tiles]
         while len(inner_walls) < self.num_inner_walls:
-            first_loc = random.choice(self.all_locations)
-            second_loc = random.choice(first_loc.neighbors(board_height=self.height, board_width=self.width))
-            while first_loc in river_locations and second_loc in river_locations:
+            valid_wall = False
+            while not valid_wall:
                 first_loc = random.choice(self.all_locations)
                 second_loc = random.choice(first_loc.neighbors(board_height=self.height, board_width=self.width))
-            location_pair = (first_loc, second_loc)
-            inner_walls.add(Wall(adjacent_locations=tuple(location_pair)))
+                while first_loc in river_locations and second_loc in river_locations:
+                    first_loc = random.choice(self.all_locations)
+                    second_loc = random.choice(first_loc.neighbors(board_height=self.height, board_width=self.width))
+                location_pair = (first_loc, second_loc)
+                wall = Wall(adjacent_locations=tuple(location_pair))
+                if wall not in inner_walls:
+                    inner_walls.add(wall)
+                    valid_wall = True
         self.inner_walls = list(inner_walls)
 
         print(f'Generating {self.num_exits} exits...')
