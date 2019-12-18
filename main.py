@@ -18,7 +18,4 @@ if __name__ == '__main__':
         players.append(Player(initial_location=player_locations[i], name=player_names[i]))
     game = Game(board=board, players=players)
     game.display_board()
-    # game.display_player_statuses()
-
     game.begin_game()
-    # print(f"Player locations: {[str(player.location) for player in players]}")

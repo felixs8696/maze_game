@@ -44,7 +44,7 @@ class Game:
         return inner_wall_adj_loc_to_wall_map
 
     def _grid_top_row(self, exit_loc_to_dir_map, exit_locations):
-        top_row = [TOP_LEFT_CORNER]
+        top_row = [EMPTY, TOP_LEFT_CORNER]
         for x in range(self.board.width):
             if self.board.grid[x][self.board.height - 1].location not in exit_locations:
                 top_row.append(HORIZONTAL_WALL)
@@ -59,7 +59,7 @@ class Game:
         return top_row
 
     def _grid_bottom_row(self, exit_loc_to_dir_map, exit_locations):
-        bottom_row = [BOTTOM_LEFT_CORNER]
+        bottom_row = [EMPTY, BOTTOM_LEFT_CORNER]
         for x in range(self.board.width):
             if self.board.grid[x][0].location not in exit_locations:
                 bottom_row.append(HORIZONTAL_WALL)
@@ -73,8 +73,15 @@ class Game:
         bottom_row.append(BOTTOM_RIGHT_CORNER)
         return bottom_row
 
+    def _horizontal_numbered_row(self):
+        bottom_numbered_row = [EMPTY, EMPTY]
+        for x in range(self.board.width):
+            bottom_numbered_row.append(x)
+            bottom_numbered_row.append(EMPTY)
+        return bottom_numbered_row
+
     def _single_wall_row(self, inner_wall_adj_loc_to_wall_map, y):
-        wall_row = [VERTICAL_WALL]
+        wall_row = [EMPTY, VERTICAL_WALL]
         for x in range(self.board.width):
             adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
             rev_adjacent_locations = (self.board.grid[x][y + 1].location, self.board.grid[x][y].location)
@@ -103,7 +110,7 @@ class Game:
             return VERTICAL_WALL
 
     def _single_grid_row(self, exit_loc_to_dir_map, exit_locations, inner_wall_adj_loc_to_wall_map, y):
-        grid_row = []
+        grid_row = [y]
         left_wall_or_exit = self._left_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
                                                     exit_locations=exit_locations, y=y)
         grid_row.append(left_wall_or_exit)
@@ -120,6 +127,7 @@ class Game:
         right_wall_or_exit = self._right_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
                                                       exit_locations=exit_locations, y=y)
         grid_row.append(right_wall_or_exit)
+        grid_row.append(y)
         return grid_row
 
     @staticmethod
@@ -128,7 +136,7 @@ class Game:
         height = len(mirrored_grid_middle_rows)
         width = len(mirrored_grid_middle_rows[0])
         for y in range(height - 2, -1, -2):
-            for x in range(2, width - 2, 2):
+            for x in range(3, width - 2, 2):
                 assert mirrored_grid_middle_rows[y][x] == EMPTY
                 up = mirrored_grid_middle_rows[y + 1][x] == VERTICAL_WALL
                 down = mirrored_grid_middle_rows[y - 1][x] == VERTICAL_WALL
@@ -167,9 +175,12 @@ class Game:
                                              exit_loc_to_dir_map=exit_loc_to_dir_map,
                                              exit_locations=exit_locations)
         bottom_row = self._grid_bottom_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
+        horizontal_numbered_row = self._horizontal_numbered_row()
+        grid_rows.append(horizontal_numbered_row)
         grid_rows.append(top_row)
         grid_rows.extend(middle_rows)
         grid_rows.append(bottom_row)
+        grid_rows.append(horizontal_numbered_row)
 
         for row in grid_rows:
             for block in row:
