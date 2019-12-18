@@ -1,6 +1,7 @@
 import random
 
 from datatypes import Direction
+from exceptions import MoveBlockedByWall
 
 
 class Location:
@@ -16,6 +17,9 @@ class Location:
 
     def __hash__(self):
         return hash((self.x, self.y))
+
+    def copy(self):
+        return Location(x=self.x, y=self.y)
 
     def get_coordinates(self):
         return self.x, self.y
@@ -51,8 +55,12 @@ class Location:
                     return False
         return True
 
-    def move(self, direction: Direction):
-        self.teleport(self.next_location(direction))
+    def move(self, direction: Direction, walls):
+        next_location = self.next_location(direction=direction)
+        if self.no_walls_block_straight_line_location(next_location, walls):
+            self.teleport(self.next_location(direction))
+        else:
+            raise MoveBlockedByWall(f'Cannot move {direction.name}. Blocked by wall.')
 
     def in_bounds(self, board_height: int, board_width: int):
         return 0 <= self.x < board_width and 0 <= self.y < board_height

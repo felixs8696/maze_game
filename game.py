@@ -26,7 +26,9 @@ class Game:
                     player.can_move, player.lose_next_turn]
             data = [x if x is not None else 'None' for x in data]
             player_data.append(data)
+        print()
         print(tabulate(player_data, headers=headers))
+        print()
 
     def _get_exit_locations(self):
         return [ex.location for ex in self.board.exits]
@@ -197,21 +199,23 @@ class Game:
 
     def begin_game(self):
         print()
-        print('Beginning game...')
+        print('Beginning game...\n')
         # print(f'Player order: ', [player.name for player in self.players])
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
             active_player.begin_turn()
-            print(f"{active_player.name}'s Turn.")
-            self.display_player_statuses()
             while not active_player.is_turn_over():
+                self.display_board()
+                self.display_player_statuses()
+                print(f"\n{active_player.name}'s Turn.")
+                original_location = active_player.location.copy()
                 chosen_move = active_player.request_move()
                 active_player.execute_move(chosen_move)
-                if isinstance(chosen_move, Movement):
-                    tile = self.board.get_tile(active_player.location)
-                    game_tile_actions = tile.get_actions()
-                    active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
-                self.display_player_statuses()
+                if active_player.location != original_location:
+                    if isinstance(chosen_move, Movement):
+                        tile = self.board.get_tile(active_player.location)
+                        game_tile_actions = tile.get_actions()
+                        active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
             active_player.end_turn()
             self.next_player()

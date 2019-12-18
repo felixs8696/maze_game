@@ -12,3 +12,7 @@ class TreasureAlreadyHeldError(Exception):
 
 class NoTreasureHeldError(Exception):
     pass
+
+
+class MoveBlockedByWall(Exception):
+    pass

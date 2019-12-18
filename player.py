@@ -4,12 +4,13 @@ from movement import Movement
 from tiles import Tile
 from location import Location
 from utils import ask_for_options
+from exceptions import MoveBlockedByWall
 
 from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
 
 class Player:
-    def __init__(self, initial_location: Location, name: str):
+    def __init__(self, initial_location: Location, name: str, board):
         self.name = name
         self.status = StatusType.HEALTHY
         self.item = None
@@ -18,13 +19,15 @@ class Player:
         self.active = False
         self.location = initial_location
         self.lose_next_turn = False
+        self.board = board
 
     def begin_turn(self):
         if self.lose_next_turn:
             print(f"Sorry {self.name}, you have lost your turn.")
             self.lose_next_turn = False
             self.end_turn()
-        self.active = True
+        else:
+            self.active = True
 
     def is_turn_over(self):
         if not self.active:
@@ -37,7 +40,13 @@ class Player:
         self.can_move = True
 
     def move(self, direction: Direction):
-        self.location.move(direction)
+        try:
+            self.location.move(direction, self.board.inner_walls)
+            self.can_move = False
+            print(f'{self.name} moves {direction.name}.')
+        except MoveBlockedByWall as e:
+            print(f'{self.name} cannot move {direction.name}. Blocked by wall.')
+            self.can_move = True
 
     def execute_mandatory_actions_and_get_remaining(self, game_tile_actions):
         remaining_actions = []
@@ -114,16 +123,25 @@ class Player:
         self.location.teleport(location)
 
     def flush_one_tile(self, direction: Direction):
-        self.location.move(direction)
+        try:
+            self.location.move(direction, self.board.inner_walls)
+            print(f"{self.name} is flushed by the river one tile.")
+        except MoveBlockedByWall as e:
+            print(f"The river tries to flush {self.name}, but a wall prevents him/her from moving.")
 
     def is_injured(self):
         return self.status == StatusType.INJURED
 
     def lose_turn(self):
         self.lose_next_turn = True
+        print(f"{self.name} loses his/her turn.")
 
     def heal(self):
         self.status = StatusType.HEALTHY
+        print(f"{self.name} is healed and is now {self.status.name}.")
 
     def do_nothing(self):
-        print(f'Player {self.name} does nothing')
+        print(f'{self.name} does nothing')
+
+    def announce_safety(self):
+        print(f'{self.name} is safe.')

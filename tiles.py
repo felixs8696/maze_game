@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 from items import RustyBullet, FirstAidKit, PileOfJunk
 from datatypes import PortalType, Direction, BorderWallType
-from actions import AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
+from actions import AnnounceSafety, AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
 from location import Location
 from datatypes import TileType
 from constants import *
@@ -33,7 +33,7 @@ class Safe(Tile):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [DoNothing(is_mandatory=True)]
+        self._actions = [AnnounceSafety(is_mandatory=True)]
 
     def __str__(self):
         return SAFE_TILE_DOT

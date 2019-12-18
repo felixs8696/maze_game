@@ -20,7 +20,7 @@ def ask_for_options(objects):
     for i in range_of_objects:
         objects_options += f"({i}) {objects[i].description()}\n"
     print(f"{objects_options}")
-    index = input("Please choose one of the above options:")
+    index = input("Please choose one of the above options: ")
     return index
 
 

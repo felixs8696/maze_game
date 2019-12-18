@@ -15,7 +15,7 @@ if __name__ == '__main__':
     player_names = ['Bob', 'Alice']
     players = []
     for i in range(num_players):
-        players.append(Player(initial_location=player_locations[i], name=player_names[i]))
+        players.append(Player(initial_location=player_locations[i], name=player_names[i], board=board))
     game = Game(board=board, players=players)
-    game.display_board()
+    # game.display_board()
     game.begin_game()
