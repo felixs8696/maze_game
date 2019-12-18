@@ -8,6 +8,7 @@ from player import Player
 from movement import Movement
 from datatypes import Direction
 from constants import *
+from tabulate import tabulate
 
 
 class Game:
@@ -16,6 +17,16 @@ class Game:
         self.players = self._randomize_player_order(players)
         self.active_player_index = 0
         self.game_over = False
+
+    def display_player_statuses(self):
+        headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Treasure', 'Can Move', 'Lost Next Turn']
+        player_data = []
+        for player in self.players:
+            data = [player.active, player.name, player.location, player.status.name, player.item, player.treasure,
+                    player.can_move, player.lose_next_turn]
+            data = [x if x is not None else 'None' for x in data]
+            player_data.append(data)
+        print(tabulate(player_data, headers=headers))
 
     def _get_exit_locations(self):
         return [ex.location for ex in self.board.exits]
@@ -174,12 +185,15 @@ class Game:
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
 
     def begin_game(self):
+        print()
         print('Beginning game...')
-        print(f'Player order: ', self.players)
+        # print(f'Player order: ', [player.name for player in self.players])
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
             active_player.begin_turn()
+            print(f"{active_player.name}'s Turn.")
+            self.display_player_statuses()
             while not active_player.is_turn_over():
                 chosen_move = active_player.request_move()
                 active_player.execute_move(chosen_move)
@@ -187,5 +201,6 @@ class Game:
                     tile = self.board.get_tile(active_player.location)
                     game_tile_actions = tile.get_actions()
                     active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
+                self.display_player_statuses()
             active_player.end_turn()
             self.next_player()

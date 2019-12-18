@@ -71,6 +71,7 @@ class Player:
 
         move_index = ask_for_options(possible_moves)
         valid_move = False
+        range_of_possible_moves = range(len(possible_moves))
         while not valid_move:
             try:
                 if int(move_index) in range_of_possible_moves:

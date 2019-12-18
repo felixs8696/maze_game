@@ -11,4 +11,4 @@ class Movement(Move):
         player.move(self.direction)
 
     def description(self):
-        return f"Move 1 space in the {self.direction} direction."
+        return f"Move 1 space in the {self.direction.name} direction."

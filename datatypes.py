@@ -31,16 +31,6 @@ class Direction(Enum):
     LEFT = 3
     RIGHT = 4
 
-    def __str__(self):
-        if self.UP:
-            return 'UP'
-        if self.DOWN:
-            return 'DOWN'
-        if self.LEFT:
-            return 'LEFT'
-        if self.RIGHT:
-            return 'RIGHT'
-
 
 class MoveType(Enum):
     ACTION = 1
