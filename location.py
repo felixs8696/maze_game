@@ -24,6 +24,33 @@ class Location:
         self.x = location.x
         self.y = location.y
 
+    def no_walls_block_straight_line_location(self, location, walls):
+        assert self != location, f"Cannot ask for blockers between the same locations."
+        assert self.x == location.x or self.y == location.y, \
+            f"There is no straight path between this location {self} and {location}"
+        wall_adj_locations = [wall.adjacent_locations for wall in walls]
+        if self.x == location.x:
+            higher_loc_y = max(self.y, location.y)
+            lower_loc_y = min(self.y, location.y)
+            for i in range(1, higher_loc_y - lower_loc_y + 1):
+                loc_1 = Location(self.x, lower_loc_y)
+                loc_2 = Location(location.x, lower_loc_y + i)
+                adj_locations = (loc_1, loc_2)
+                rev_adj_locations = (loc_2, loc_1)
+                if adj_locations in wall_adj_locations or rev_adj_locations in wall_adj_locations:
+                    return False
+        if self.y == location.y:
+            higher_loc_x = max(self.x, location.x)
+            lower_loc_x = min(self.x, location.x)
+            for i in range(1, higher_loc_x - lower_loc_x + 1):
+                loc_1 = Location(lower_loc_x, self.y)
+                loc_2 = Location(lower_loc_x + i, location.y)
+                adj_locations = (loc_1, loc_2)
+                rev_adj_locations = (loc_2, loc_1)
+                if adj_locations in wall_adj_locations or rev_adj_locations in wall_adj_locations:
+                    return False
+        return True
+
     def move(self, direction: Direction):
         self.teleport(self.next_location(direction))
 
