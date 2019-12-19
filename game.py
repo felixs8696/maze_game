@@ -204,18 +204,20 @@ class Game:
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
+            other_players = [player for player in self.players if not player == active_player]
             active_player.begin_turn()
-            while not active_player.is_turn_over():
+            while not active_player.is_turn_over(other_players=other_players):
                 self.display_board()
                 self.display_player_statuses()
                 print(f"\n{active_player.name}'s Turn.")
                 original_location = active_player.location.copy()
-                chosen_move = active_player.request_move()
+                chosen_move = active_player.request_move(other_players=other_players)
                 active_player.execute_move(chosen_move)
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):
                         tile = self.board.get_tile(active_player.location)
                         game_tile_actions = tile.get_actions()
                         active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
+                        active_player.show_colliding_players(other_players=other_players)
             active_player.end_turn()
             self.next_player()

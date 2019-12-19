@@ -35,6 +35,7 @@ class Direction(Enum):
 class MoveType(Enum):
     ACTION = 1
     MOVEMENT = 2
+    END_TURN = 3
 
 
 class TileCategories(Enum):

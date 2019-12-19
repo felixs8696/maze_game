@@ -4,10 +4,14 @@ from abc import ABC, abstractmethod
 
 from move import Move
 from utils import get_yes_or_no_response, response_is_yes
-from datatypes import Direction
+from datatypes import Direction, MoveType
 
 
 class Action(Move):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.move_type = MoveType.ACTION
 
     @abstractmethod
     def description(self):
@@ -130,6 +134,32 @@ class ShootBullet(Action):
 
     def description(self):
         return f"Shoot up to 3 spaces in the {self.direction} direction."
+
+
+class Fight(Action):
+
+    def __init__(self, other_player, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.other_player = other_player
+
+    def affect_player(self, player, **kwargs):
+        player.fight(self.other_player)
+
+    def description(self):
+        return f"Fight {self.other_player.name}."
+
+
+class EndTurn(Action):
+
+    def __init__(self):
+        super().__init__(is_mandatory=False)
+        self.move_type = MoveType.END_TURN
+
+    def affect_player(self, player, **kwargs):
+        player.end_turn()
+
+    def description(self):
+        return f"You end your turn."
 
 
 class DoNothing(Action):
