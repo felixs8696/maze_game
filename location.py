@@ -28,10 +28,13 @@ class Location:
         self.x = location.x
         self.y = location.y
 
-    def no_walls_block_straight_line_location(self, location, walls):
+    def no_walls_block_straight_line_location(self, location, walls, board_height, board_width):
         assert self != location, f"Cannot ask for blockers between the same locations."
         assert self.x == location.x or self.y == location.y, \
-            f"There is no straight path between this location {self} and {location}"
+            f"There is no straight path between this location {str(self)} and {str(location)}"
+        if not self.in_bounds(board_height=board_height, board_width=board_width) or \
+            not location.in_bounds(board_height=board_height, board_width=board_width):
+            return False
         wall_adj_locations = [wall.adjacent_locations for wall in walls]
         if self.x == location.x:
             higher_loc_y = max(self.y, location.y)
@@ -55,9 +58,16 @@ class Location:
                     return False
         return True
 
-    def move(self, direction: Direction, walls):
+    def move(self, direction: Direction, board):
+        walls = board.inner_walls
         next_location = self.next_location(direction=direction)
-        if self.no_walls_block_straight_line_location(next_location, walls):
+        no_walls_blocking = self.no_walls_block_straight_line_location(location=next_location,
+                                                                       walls=board.inner_walls,
+                                                                       board_height=board.height,
+                                                                       board_width=board.width)
+        in_bounds = self.next_location(direction=direction).in_bounds(board_height=board.height,
+                                                                      board_width=board.width)
+        if no_walls_blocking and in_bounds:
             self.teleport(self.next_location(direction))
         else:
             raise MoveBlockedByWall(f'Cannot move {direction.name}. Blocked by wall.')

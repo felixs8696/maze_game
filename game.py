@@ -22,7 +22,7 @@ class Game:
         headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Treasure', 'Can Move', 'Lost Next Turn']
         player_data = []
         for player in self.players:
-            data = [player.active, player.name, player.location, player.status.name, player.item, player.treasure,
+            data = [player.active, player.name, player.location, player.status.name, str(player.item), player.treasure,
                     player.can_move, player.lose_next_turn]
             data = [x if x is not None else 'None' for x in data]
             player_data.append(data)
@@ -38,12 +38,6 @@ class Game:
         for ex in self.board.exits:
             exit_loc_to_dir_map[ex.location] = ex.direction
         return exit_loc_to_dir_map
-
-    def _get_inner_wall_adj_loc_to_wall_map(self):
-        inner_wall_adj_loc_to_wall_map = {}
-        for wall in self.board.inner_walls:
-            inner_wall_adj_loc_to_wall_map[wall.adjacent_locations] = wall
-        return inner_wall_adj_loc_to_wall_map
 
     def _grid_top_row(self, exit_loc_to_dir_map, exit_locations):
         top_row = [EMPTY, TOP_LEFT_CORNER]
@@ -82,21 +76,6 @@ class Game:
             bottom_numbered_row.append(EMPTY)
         return bottom_numbered_row
 
-    def _single_wall_row(self, inner_wall_adj_loc_to_wall_map, y):
-        wall_row = [EMPTY, VERTICAL_WALL]
-        for x in range(self.board.width):
-            adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x][y + 1].location)
-            rev_adjacent_locations = (self.board.grid[x][y + 1].location, self.board.grid[x][y].location)
-            if adjacent_locations in inner_wall_adj_loc_to_wall_map or \
-                    rev_adjacent_locations in inner_wall_adj_loc_to_wall_map:
-                wall_row.append(HORIZONTAL_WALL)
-            else:
-                wall_row.append(EMPTY)
-            if x < self.board.width - 1:
-                wall_row.append(EMPTY)
-        wall_row.append(VERTICAL_WALL)
-        return wall_row
-
     def _left_wall_or_exit(self, exit_loc_to_dir_map, exit_locations, y):
         if self.board.grid[0][y].location in exit_locations and \
                 exit_loc_to_dir_map[self.board.grid[0][y].location] == Direction.LEFT:
@@ -110,27 +89,6 @@ class Game:
             return EXIT_RIGHT
         else:
             return VERTICAL_WALL
-
-    def _single_grid_row(self, exit_loc_to_dir_map, exit_locations, inner_wall_adj_loc_to_wall_map, y):
-        grid_row = [y]
-        left_wall_or_exit = self._left_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                                    exit_locations=exit_locations, y=y)
-        grid_row.append(left_wall_or_exit)
-        for x in range(self.board.width):
-            grid_row.append(str(self.board.grid[x][y]))
-            if x < self.board.width - 1:
-                adjacent_locations = (self.board.grid[x][y].location, self.board.grid[x + 1][y].location)
-                rev_adjacent_locations = (self.board.grid[x + 1][y].location, self.board.grid[x][y].location)
-                if adjacent_locations in inner_wall_adj_loc_to_wall_map or \
-                        rev_adjacent_locations in inner_wall_adj_loc_to_wall_map:
-                    grid_row.append(VERTICAL_WALL)
-                else:
-                    grid_row.append(EMPTY)
-        right_wall_or_exit = self._right_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                                      exit_locations=exit_locations, y=y)
-        grid_row.append(right_wall_or_exit)
-        grid_row.append(y)
-        return grid_row
 
     @staticmethod
     def _optimize_wall_cross_sections(grid_middle_rows):
@@ -152,30 +110,69 @@ class Game:
         unmirrored_grid_middle_rows = mirrored_grid_middle_rows[::-1]
         return unmirrored_grid_middle_rows
 
-    def _grid_middle_rows(self, inner_wall_adj_loc_to_wall_map, exit_loc_to_dir_map, exit_locations):
-        middle_rows = []
+    def _location_to_display_board_coords(self, location):
+        return ((self.board.height - 1) * 2) - (location.y * 2), (location.x * 2) + 2
+
+    def _create_middle_rows(self, exit_loc_to_dir_map, exit_locations):
+        grid_middle_rows = []
         for y in range(self.board.height - 1, -1, -1):
-            if y < self.board.height - 1:
-                middle_rows.append(self._single_wall_row(inner_wall_adj_loc_to_wall_map, y))
-            middle_rows.append(self._single_grid_row(exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                                     exit_locations=exit_locations,
-                                                     inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
-                                                     y=y))
+            inner_tile_row = [y]
+            left_wall_or_exit = self._left_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                        exit_locations=exit_locations, y=y)
+            inner_tile_row.append(left_wall_or_exit)
+            for x in range(self.board.width):
+                inner_tile_row.append(str(self.board.grid[x][y]))
+                if x < self.board.width - 1:
+                    inner_tile_row.append(EMPTY)
 
-        middle_rows = self._optimize_wall_cross_sections(middle_rows)
+            right_wall_or_exit = self._right_wall_or_exit(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                                          exit_locations=exit_locations, y=y)
+            inner_tile_row.append(right_wall_or_exit)
+            grid_middle_rows.append(inner_tile_row)
 
-        return middle_rows
+            if y > 0:
+                empty_wall_row = [EMPTY, VERTICAL_WALL]
+                for x in range(self.board.width):
+                    empty_wall_row.append(EMPTY)
+                    if x < self.board.width - 1:
+                        empty_wall_row.append(EMPTY)
+                empty_wall_row.append(VERTICAL_WALL)
+                grid_middle_rows.append(empty_wall_row)
+
+        for wall in self.board.inner_walls:
+            loc_1, loc_2 = wall.adjacent_locations
+            db_coord_1_x, db_coord_1_y = self._location_to_display_board_coords(loc_1)
+            db_coord_2_x, db_coord_2_y = self._location_to_display_board_coords(loc_2)
+            higher_x = max(db_coord_1_x, db_coord_2_x)
+            lower_x = min(db_coord_1_x, db_coord_2_x)
+            higher_y = max(db_coord_1_y, db_coord_2_y)
+            lower_y = min(db_coord_1_y, db_coord_2_y)
+            assert higher_x - lower_x == 2 or higher_y - lower_y == 2
+            if higher_x - lower_x == 2:
+                assert higher_y == lower_y
+                wall_x = higher_x - 1
+                wall_y = higher_y
+                wall_type = HORIZONTAL_WALL
+                grid_middle_rows[wall_x][wall_y] = wall_type
+            elif higher_y - lower_y == 2:
+                assert higher_x == lower_x
+                wall_x = higher_x
+                wall_y = higher_y - 1
+                wall_type = VERTICAL_WALL
+                grid_middle_rows[wall_x][wall_y] = wall_type
+
+        grid_middle_rows = self._optimize_wall_cross_sections(grid_middle_rows)
+        return grid_middle_rows
 
     def display_board(self):
+        # print(np.array([str(wall) for wall in self.board.inner_walls]))
         exit_locations = self._get_exit_locations()
         exit_loc_to_dir_map = self._get_exit_loc_to_dir_map()
-        inner_wall_adj_loc_to_wall_map = self._get_inner_wall_adj_loc_to_wall_map()
 
         grid_rows = []
         top_row = self._grid_top_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
-        middle_rows = self._grid_middle_rows(inner_wall_adj_loc_to_wall_map=inner_wall_adj_loc_to_wall_map,
-                                             exit_loc_to_dir_map=exit_loc_to_dir_map,
-                                             exit_locations=exit_locations)
+        middle_rows = self._create_middle_rows(exit_loc_to_dir_map=exit_loc_to_dir_map,
+                                               exit_locations=exit_locations)
         bottom_row = self._grid_bottom_row(exit_loc_to_dir_map=exit_loc_to_dir_map, exit_locations=exit_locations)
         horizontal_numbered_row = self._horizontal_numbered_row()
         grid_rows.append(horizontal_numbered_row)
@@ -206,18 +203,25 @@ class Game:
             active_player = self.players[self.active_player_index]
             other_players = [player for player in self.players if not player == active_player]
             active_player.begin_turn()
-            while not active_player.is_turn_over(other_players=other_players):
+            available_tile_actions = []
+            while not active_player.is_turn_over(other_players=other_players,
+                                                 board=self.board,
+                                                 available_tile_actions=available_tile_actions):
                 self.display_board()
                 self.display_player_statuses()
                 print(f"\n{active_player.name}'s Turn.")
                 original_location = active_player.location.copy()
-                chosen_move = active_player.request_move(other_players=other_players)
+                chosen_move = active_player.request_move(other_players=other_players,
+                                                         board=self.board,
+                                                         available_tile_actions=available_tile_actions)
                 active_player.execute_move(chosen_move)
+                available_tile_actions = []
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):
                         tile = self.board.get_tile(active_player.location)
-                        game_tile_actions = tile.get_actions()
-                        active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
+                        game_tile_actions = tile.get_actions(active_player)
+                        available_tile_actions = \
+                            active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
                         active_player.show_colliding_players(other_players=other_players)
             active_player.end_turn()
             self.next_player()

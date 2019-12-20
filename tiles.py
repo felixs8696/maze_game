@@ -21,7 +21,7 @@ class Tile(ABC):
     def __str__(self):
         pass
 
-    def get_actions(self) -> List[Action]:
+    def get_actions(self, player) -> List[Action]:
         return self._actions
 
     @abstractmethod
@@ -60,10 +60,15 @@ class Shop(Tile):
     def __init__(self, location: Location):
         super().__init__(location)
         self.items = [RustyBullet(), FirstAidKit(), PileOfJunk()]
-        self._actions = [DoNothing(), BuyItem(items=self.items)]
+        self._actions = [BuyItem(items=self.items)]
 
     def __str__(self):
         return 'S'
+
+    def get_actions(self, player) -> List[Action]:
+        if not player.has_item():
+            return self._actions
+        return []
 
     def description(self):
         return f"You have entered a shop."
@@ -73,7 +78,7 @@ class Hospital(Tile):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [DoNothing(), Heal()]
+        self._actions = [Heal()]
 
     def __str__(self):
         return 'H'
@@ -123,7 +128,7 @@ class Treasure(Tile, ABC):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [DoNothing(), AcquireTreasure()]
+        self._actions = [AcquireTreasure()]
 
     def __str__(self):
         return 'T'

@@ -48,7 +48,9 @@ class Board:
             visited[location] = True
             for neighbor in location.neighbors(board_height=self.height, board_width=self.width):
                 if not visited[neighbor] and location.no_walls_block_straight_line_location(location=neighbor,
-                                                                                            walls=inner_walls):
+                                                                                            walls=inner_walls,
+                                                                                            board_height=self.height,
+                                                                                            board_width=self.width):
                     queue.append(neighbor)
 
         untraversed_locations = []
@@ -56,14 +58,6 @@ class Board:
             if not visited[k]:
                 untraversed_locations.append(k)
         return untraversed_locations
-
-    # def fix_walls_to_prevent_untraversable_locations(self):
-    #     untraversed_locations = self.all_locations
-    #     while len(untraversed_locations) != 0:
-    #         untraversed_locations = self._get_untraversable_locations_from_origin()
-    #
-    #     return untraversed_locations
-
 
     def _get_border_locations(self):
         top_border = [Location(x=x, y=self.height - 1) for x in range(self.width)]
@@ -140,7 +134,7 @@ class Board:
                     if len(untraversable_walls) != 0:
                         inner_walls.remove(wall)
                         valid_wall = False
-        self.inner_walls = list(inner_walls)
+        self.inner_walls = tuple(inner_walls)
 
         print(f'Generating {self.num_exits} exits...')
         self.exits = []
