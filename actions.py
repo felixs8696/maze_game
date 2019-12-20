@@ -34,7 +34,7 @@ class BuyItem(Action):
         choose_to_act = get_yes_or_no_response(prompt)
 
         if response_is_yes(choose_to_act):
-            chosen_item = random.choice(self.items)
+            chosen_item = np.random.choice(self.items)
             print(f"Thank you for your purchase!")
             player.acquire_item(chosen_item)
         else:

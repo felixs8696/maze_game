@@ -9,6 +9,7 @@ from movement import Movement
 from datatypes import Direction
 from constants import *
 from tabulate import tabulate
+from exceptions import GameOver
 
 
 class Game:
@@ -207,6 +208,7 @@ class Game:
             while not active_player.is_turn_over(other_players=other_players,
                                                  board=self.board,
                                                  available_tile_actions=available_tile_actions):
+                print(f"{[str(ex) for ex in self.board.exits]}")
                 self.display_board()
                 self.display_player_statuses()
                 print(f"\n{active_player.name}'s Turn.")
@@ -214,7 +216,13 @@ class Game:
                 chosen_move = active_player.request_move(other_players=other_players,
                                                          board=self.board,
                                                          available_tile_actions=available_tile_actions)
-                active_player.execute_move(chosen_move)
+                try:
+                    active_player.execute_move(chosen_move)
+                except GameOver as e:
+                    print(f"{active_player.name} has exited the maze with the treasure and won the game.")
+                    self.display_board()
+                    self.display_player_statuses()
+                    exit(0)
                 available_tile_actions = []
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):

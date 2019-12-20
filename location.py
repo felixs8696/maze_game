@@ -1,7 +1,7 @@
 import random
 
 from datatypes import Direction
-from exceptions import MoveBlockedByWall
+from exceptions import MoveBlockedByWall, ExitFound
 
 
 class Location:
@@ -67,8 +67,14 @@ class Location:
                                                                        board_width=board.width)
         in_bounds = self.next_location(direction=direction).in_bounds(board_height=board.height,
                                                                       board_width=board.width)
+
+        if not in_bounds:
+            for ex in board.exits:
+                if self == ex.location and direction == ex.direction:
+                    raise ExitFound(f'Exit found.')
+
         if no_walls_blocking and in_bounds:
-            self.teleport(self.next_location(direction))
+                self.teleport(self.next_location(direction))
         else:
             raise MoveBlockedByWall(f'Cannot move {direction.name}. Blocked by wall.')
 

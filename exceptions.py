@@ -16,3 +16,11 @@ class NoTreasureHeldError(Exception):
 
 class MoveBlockedByWall(Exception):
     pass
+
+
+class ExitFound(Exception):
+    pass
+
+
+class GameOver(Exception):
+    pass

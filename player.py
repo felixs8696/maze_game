@@ -8,7 +8,7 @@ from movement import Movement
 from tiles import Tile
 from location import Location
 from utils import ask_for_options, get_yes_or_no_response, response_is_yes
-from exceptions import MoveBlockedByWall
+from exceptions import MoveBlockedByWall, ExitFound, GameOver
 from actions import Fight, EndTurn
 
 from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
@@ -63,6 +63,11 @@ class Player:
             self.location.move(direction, self.board)
             self.can_move = False
             print(f'{self.name} moves {direction.name}.')
+        except ExitFound as e:
+            if self.has_treasure():
+                raise GameOver(f"{self.name} has exited the maze with the treasure and won the game.")
+            else:
+                print(f"{self.name} has found an exit, but has no treasure.")
         except MoveBlockedByWall as e:
             print(f'{self.name} cannot move {direction.name}. Blocked by wall.')
             self.can_move = True
@@ -136,6 +141,9 @@ class Player:
 
     def has_item(self):
         return self.item is not None
+
+    def has_treasure(self):
+        return self.treasure is not None
 
     def acquire_item(self, item: ItemType):
         if self.item is None:
