@@ -7,7 +7,7 @@ from board import Board
 from player import Player
 from movement import Movement
 from datatypes import Direction
-from constants import *
+from symbols import *
 from tabulate import tabulate
 from exceptions import GameOver
 

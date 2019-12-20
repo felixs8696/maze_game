@@ -8,7 +8,7 @@ from datatypes import PortalType, Direction, BorderWallType
 from actions import AnnounceSafety, AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
 from location import Location
 from datatypes import TileType
-from constants import *
+from symbols import *
 
 
 class Tile(ABC):
@@ -36,7 +36,7 @@ class Safe(Tile):
         self._actions = [AnnounceSafety(is_mandatory=True)]
 
     def __str__(self):
-        return SAFE_TILE_DOT
+        return SAFE_SYMBOL
 
     def description(self):
         return f"You are safe."
@@ -49,7 +49,7 @@ class Marsh(Tile):
         self._actions = [LoseTurn(is_mandatory=True)]
 
     def __str__(self):
-        return 'M'
+        return MARSH_SYMBOL
 
     def description(self):
         return f"You lose your next turn."
@@ -63,7 +63,7 @@ class Shop(Tile):
         self._actions = [BuyItem(items=self.items)]
 
     def __str__(self):
-        return 'S'
+        return SHOP_SYMBOL
 
     def get_actions(self, player) -> List[Action]:
         if not player.has_item():
@@ -81,7 +81,7 @@ class Hospital(Tile):
         self._actions = [Heal()]
 
     def __str__(self):
-        return 'H'
+        return HOSPITAL_SYMBOL
 
     def description(self):
         return f"You have entered the hospital."
@@ -112,13 +112,13 @@ class River(Tile, ABC):
 
     def __str__(self):
         if self.direction == Direction.UP:
-            return u'\u2191'
+            return RIVER_U_SYMBOL
         if self.direction == Direction.DOWN:
-            return u'\u2193'
+            return RIVER_D_SYMBOL
         if self.direction == Direction.LEFT:
-            return u'\u2190'
+            return RIVER_L_SYMBOL
         if self.direction == Direction.RIGHT:
-            return u'\u2192'
+            return RIVER_R_SYMBOL
 
     def description(self):
         return f"You have landed on a river tile."
@@ -131,7 +131,7 @@ class Treasure(Tile, ABC):
         self._actions = [AcquireTreasure()]
 
     def __str__(self):
-        return 'T'
+        return TREASURE_SYMBOL
 
     def description(self):
         return f"You have entered a treasure room."
@@ -162,20 +162,25 @@ class TileFactory:
 
     @staticmethod
     def create_type_a_portal_tile(location: Location):
-        a_portal = Portal(location=location, exit_location=location, portal_type=PortalType.A, name='F')
+        a_portal = Portal(location=location, exit_location=location, portal_type=PortalType.A, name=PORTAL_F_SYMBOL)
         return a_portal
 
     @staticmethod
     def create_type_ab_portal_tiles(locations: Tuple[Location, Location]):
-        a_portal = Portal(location=locations[0], exit_location=locations[1], portal_type=PortalType.AB, name='A')
-        b_portal = Portal(location=locations[1], exit_location=locations[0], portal_type=PortalType.AB, name='B')
+        a_portal = Portal(location=locations[0], exit_location=locations[1], portal_type=PortalType.AB,
+                          name=PORTAL_A_SYMBOL)
+        b_portal = Portal(location=locations[1], exit_location=locations[0], portal_type=PortalType.AB,
+                          name=PORTAL_B_SYMBOL)
         return a_portal, b_portal
 
     @staticmethod
     def create_type_abc_portal_tiles(locations: Tuple[Location, Location]):
-        a_portal = Portal(location=locations[0], exit_location=locations[1], portal_type=PortalType.ABC, name='1')
-        b_portal = Portal(location=locations[1], exit_location=locations[2], portal_type=PortalType.ABC, name='2')
-        c_portal = Portal(location=locations[2], exit_location=locations[0], portal_type=PortalType.ABC, name='3')
+        a_portal = Portal(location=locations[0], exit_location=locations[1], portal_type=PortalType.ABC,
+                          name=PORTAL_1_SYMBOL)
+        b_portal = Portal(location=locations[1], exit_location=locations[2], portal_type=PortalType.ABC,
+                          name=PORTAL_2_SYMBOL)
+        c_portal = Portal(location=locations[2], exit_location=locations[0], portal_type=PortalType.ABC,
+                          name=PORTAL_3_SYMBOL)
         return a_portal, b_portal, c_portal
 
 
