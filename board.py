@@ -10,7 +10,8 @@ from player import Player
 class Board:
     def __init__(self, height=8, width=8, river_max_num_turns=2, num_marshes=8, num_river_tiles=12, num_hospitals=1,
                  num_shops=1, num_aa_portal_sets=1, num_ab_portal_sets=1, num_abc_portal_sets=1, num_treasures=2,
-                 num_inner_walls=32, num_exits=2):
+                 num_inner_walls=32, num_exits=2, auto_rng=False):
+        self.auto_rng = auto_rng
         self.height = height
         self.width = width
 
@@ -117,7 +118,8 @@ class Board:
             print(f'Generating {num_tiles} {tile_type.name.lower()}{"s" if num_tiles > 1 else ""}...')
             for _ in range(num_tiles):
                 location = random.choice(list(safe_locations))
-                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location)
+                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location,
+                                                             auto_rng=self.auto_rng)
                 safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
 
         print(f'Generating {self.num_inner_walls} inner walls...')
@@ -187,7 +189,8 @@ class Board:
         player_locations = random.sample(self.safe_locations, k=num_players)
         players = []
         for i in range(num_players):
-            players.append(Player(initial_location=player_locations[i].copy(), name=player_names[i], board=self))
+            players.append(Player(initial_location=player_locations[i].copy(), name=player_names[i], board=self,
+                                  auto_rng=self.auto_rng))
         return players
 
 def _exit_location_compatible_with_river(exit_locations, river_tiles, board_height, board_width):

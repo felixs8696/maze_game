@@ -90,6 +90,9 @@ if __name__ == '__main__':
                         default=-1)
     parser.add_argument("-i", "--playable_game_index", help="Chosen game index from playable game index.", type=int,
                         default=-1)
+    parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
+                                                 "battle other players. Otherwise, use real dice for randomness.",
+                        action="store_true")
     parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")
     args = parser.parse_args()
 
@@ -132,7 +135,7 @@ if __name__ == '__main__':
         player_names = ask_and_get_player_names_for_playable_board(num_players=chosen_board_config[NUM_PLAYERS])
 
     random.seed(random_seed)
-    board = Board(**board_config)
+    board = Board(**board_config, auto_rng=args.auto_rng)
     players = board.generate_safe_players(player_names=player_names)
     game = Game(board=board, players=players, display_all_info_each_turn=args.omniscient)
 

@@ -1,10 +1,10 @@
-import random
+import json
 import numpy as np
 
 from abc import ABC, abstractmethod
 
 from move import Move
-from utils import get_yes_or_no_response, response_is_yes
+from utils import get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
 from datatypes import Direction, MoveType, StatusType
 from location import Location
 
@@ -22,19 +22,34 @@ class Action(Move):
 
 class BuyItem(Action):
 
-    def __init__(self, items, is_mandatory=False):
+    def __init__(self, items, item_map: dict, auto_rng: bool=False, is_mandatory=False):
         super().__init__(is_mandatory)
         self.items = items
+        self.auto_rng = auto_rng
+        self.item_map = item_map
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         if player.has_item():
             print(f"You already have an item ({player.item}) and you cannot hold multiple items.")
+            return None
 
+        print(f"Random Item Shop Catalog: {json.dumps(self.item_map, default=lambda x: str(x))}")
         prompt = "Would you like to acquire an item from the shop? (y/n): "
         choose_to_act = get_yes_or_no_response(prompt)
 
         if response_is_yes(choose_to_act):
-            chosen_item = np.random.choice(self.items)
+            if self.auto_rng:
+                chosen_item = np.random.choice(self.items)
+            else:
+                chosen_item = None
+                while chosen_item is None:
+                    try:
+                        number = prompt_real_dice_roll_result(player)
+                        chosen_item = self.item_map[number]
+                    except KeyError:
+                        print(f"Invalid dice roll. The shop only has the following items: "
+                              f"{json.dumps(self.item_map, indent=2)}")
+                        print(f"Please enter a dice roll that is one of these values: {self.item_map.keys()}")
             print(f"Thank you for your purchase!")
             player.acquire_item(chosen_item)
         else:
@@ -50,7 +65,7 @@ class Teleport(Action):
         super().__init__(is_mandatory)
         self.exit_location = exit_location
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.teleport_to(self.exit_location)
 
     def description(self):
@@ -63,7 +78,7 @@ class Flush(Action):
         super().__init__(is_mandatory)
         self.direction = direction
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.flush_one_tile(self.direction)
 
     def description(self):
@@ -72,7 +87,11 @@ class Flush(Action):
 
 class Heal(Action):
 
-    def affect_player(self, player, **kwargs):
+    def __init__(self, source, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.source = source
+
+    def affect_player(self, player):
         if not player.is_injured():
             print(f"You are already healthy.")
 
@@ -80,18 +99,21 @@ class Heal(Action):
         choose_to_heal = get_yes_or_no_response(prompt)
 
         if response_is_yes(choose_to_heal):
-            player.lose_turn()
+            if self.source == TileType.HOSPITAL:
+                player.lose_turn()
             player.heal()
         else:
             player.do_nothing()
 
     def description(self):
-        return f"Heal at the cost of one turn."
+        if self.source == TileType.HOSPITAL:
+            return f"Spend your next turn in the hospital to heal."
+        return f"Heal yourself."
 
 
 class DropItem(Action):
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.drop_item()
 
     def description(self):
@@ -100,7 +122,7 @@ class DropItem(Action):
 
 class AcquireTreasure(Action):
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.acquire_treasure()
 
     def description(self):
@@ -109,7 +131,7 @@ class AcquireTreasure(Action):
 
 class DropTreasure(Action):
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.drop_treasure()
 
     def description(self):
@@ -118,7 +140,7 @@ class DropTreasure(Action):
 
 class LoseTurn(Action):
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.lose_turn()
 
     def description(self):
@@ -172,7 +194,7 @@ class ShootBullet(Action):
                     raise Exception(f"Shooting in invalid direction: {self.direction}")
         return shot_destination, first_player_hit
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         shot_destination, first_player_hit = self._get_shot_destination(player, self.direction)
         if player.location.no_walls_block_straight_line_location(location=shot_destination,
                                                                  walls=self.board.inner_walls,
@@ -202,7 +224,7 @@ class Fight(Action):
         super().__init__(is_mandatory)
         self.other_player = other_player
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.fight(self.other_player)
 
     def description(self):
@@ -215,7 +237,7 @@ class EndTurn(Action):
         super().__init__(is_mandatory=False)
         self.move_type = MoveType.END_TURN
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.end_turn()
 
     def description(self):
@@ -224,7 +246,7 @@ class EndTurn(Action):
 
 class DoNothing(Action):
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.do_nothing()
 
     def description(self):

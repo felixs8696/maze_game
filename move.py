@@ -7,7 +7,7 @@ class Move(ABC):
         self.is_mandatory = is_mandatory
 
     @abstractmethod
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         pass
 
     @abstractmethod

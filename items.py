@@ -40,7 +40,7 @@ class FirstAidKit(Item):
         return "First Aid Kit"
 
     def get_actions(self, player, other_players, board):
-        return [DropItem(), Heal()]
+        return [DropItem(), Heal(source=self.type)]
 
 
 class PileOfJunk(Item):

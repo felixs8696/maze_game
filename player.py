@@ -7,7 +7,7 @@ from move import Move
 from movement import Movement
 from tiles import Tile
 from location import Location
-from utils import ask_for_options, get_yes_or_no_response, response_is_yes
+from utils import ask_for_options, get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
 from exceptions import MoveBlockedByWall, ExitFound, GameOver
 from actions import Fight, EndTurn, DropTreasure
 
@@ -15,7 +15,7 @@ from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHel
 
 
 class Player:
-    def __init__(self, initial_location: Location, name: str, board):
+    def __init__(self, initial_location: Location, name: str, board, auto_rng: bool=False):
         self.name = name
         self.status = StatusType.HEALTHY
         self.item = None
@@ -26,6 +26,7 @@ class Player:
         self.lose_next_turn = False
         self.board = board
         self.player_id = uuid.uuid4()
+        self.auto_rng = auto_rng
 
     def __eq__(self, other):
         return self.player_id == other.player_id
@@ -230,9 +231,13 @@ class Player:
                           f"so cannot use it.")
                 other_player.get_injured()
                 return None
-        dice = range(6)
-        attacker_roll = np.random.choice(dice) + 1
-        defender_roll = np.random.choice(dice) + 1
+        if self.auto_rng:
+            dice = range(6)
+            attacker_roll = np.random.choice(dice) + 1
+            defender_roll = np.random.choice(dice) + 1
+        else:
+            attacker_roll = prompt_real_dice_roll_result(self)
+            defender_roll = prompt_real_dice_roll_result(other_player)
 
         print(f"{self.name} attacks {other_player.name}. {self.name} attacks with a power level of ({attacker_roll}/6). "
               f"{other_player.name} defends with a power level of ({defender_roll}/6).")

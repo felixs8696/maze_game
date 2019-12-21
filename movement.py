@@ -8,7 +8,7 @@ class Movement(Move):
         self.direction = direction
         self.move_type = MoveType.MOVEMENT
 
-    def affect_player(self, player, **kwargs):
+    def affect_player(self, player):
         player.move(self.direction)
 
     def description(self):

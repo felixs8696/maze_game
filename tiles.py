@@ -10,6 +10,7 @@ from location import Location
 from datatypes import TileType
 from symbols import *
 from exceptions import NoTreasureOnTile, InvalidDirection
+from utils import generate_dice_roll_map
 
 
 class Tile(ABC):
@@ -95,10 +96,17 @@ class Marsh(Tile):
 
 class Shop(Tile):
 
-    def __init__(self, location: Location):
+    def __init__(self, location: Location, auto_rng: bool=False):
         super().__init__(location)
-        self.items = [RustyBullet(), FirstAidKit(), PileOfJunk()]
-        self._actions = [BuyItem(items=self.items)]
+        rusty_bullet = RustyBullet()
+        first_aid_kit = FirstAidKit()
+        pile_of_junk = PileOfJunk()
+        self.items = [rusty_bullet, first_aid_kit, pile_of_junk]
+        self.item_map = generate_dice_roll_map(one=rusty_bullet, two=rusty_bullet,
+                                               three=first_aid_kit, four=first_aid_kit,
+                                               five=pile_of_junk, six=pile_of_junk)
+        self.auto_rng = auto_rng
+        self._actions = [BuyItem(items=self.items, item_map=self.item_map, auto_rng=self.auto_rng)]
         self.symbol = SHOP_SYMBOL
         self.type = TileType.SHOP
 
@@ -125,9 +133,9 @@ class Hospital(Tile):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [Heal()]
         self.symbol = HOSPITAL_SYMBOL
         self.type = TileType.HOSPITAL
+        self._actions = [Heal(source=self.type)]
 
     def announce_tile(self, player):
         print(f"{player.name} enters a {TileType.HOSPITAL.name}.")
@@ -197,7 +205,7 @@ class River(Tile, ABC):
 class TileFactory:
 
     @staticmethod
-    def create_static_tile(tile_type: TileType, location: Location):
+    def create_static_tile(tile_type: TileType, location: Location, auto_rng: bool):
         if tile_type == TileType.SAFE:
             return Safe(location=location)
         if tile_type == TileType.MARSH:
@@ -205,7 +213,7 @@ class TileFactory:
         if tile_type == TileType.HOSPITAL:
             return Hospital(location=location)
         if tile_type == TileType.SHOP:
-            return Shop(location=location)
+            return Shop(location=location, auto_rng=auto_rng)
         if tile_type == TileType.TREASURE:
             treasure_tile = Safe(location=location)
             treasure_tile.add_treasure()
