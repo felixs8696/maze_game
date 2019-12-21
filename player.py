@@ -77,7 +77,7 @@ class Player:
         game_tile_actions = tile.get_actions(self)
         for action in game_tile_actions:
             if action.is_mandatory:
-                action.affect_player(self)
+                self.execute_move(action)
 
     def execute_move(self, move: Move):
         move.affect_player(self)

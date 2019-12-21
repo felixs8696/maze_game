@@ -43,8 +43,6 @@ class Tile(ABC):
         for action in self.get_actions(player):
             if not action.is_mandatory:
                 optional_actions.append(action)
-        print(f"all_actions: {self.get_actions(player)}")
-        print(f"optional_actions: {optional_actions}")
         return optional_actions
 
     def get_actions(self, player) -> List[Action]:
@@ -85,6 +83,7 @@ class Shop(Tile):
         super().__init__(location)
         self.items = [RustyBullet(), FirstAidKit(), PileOfJunk()]
         self._actions = [BuyItem(items=self.items)]
+        self.symbol = SHOP_SYMBOL
 
     def get_actions(self, player) -> List[Action]:
         actions = []
@@ -105,6 +104,7 @@ class Hospital(Tile):
     def __init__(self, location: Location):
         super().__init__(location)
         self._actions = [Heal()]
+        self.symbol = HOSPITAL_SYMBOL
 
     def description(self):
         return f"You have entered the hospital."

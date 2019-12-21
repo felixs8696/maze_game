@@ -4,6 +4,7 @@ from datatypes import TileType, TileCategories, Direction
 from tiles import TileFactory, Tile, Safe
 from location import Location
 from borders import Wall, Exit
+from player import Player
 
 
 class Board:
@@ -171,7 +172,16 @@ class Board:
         return random.sample(safe_locations, k=len(safe_locations))
 
     def get_tile(self, location):
-        return self.grid[location.x][location.y]
+        x, y = location.get_coordinates()
+        return self.grid[x][y]
+
+    def generate_safe_players(self, player_names):
+        num_players = len(player_names)
+        player_locations = random.sample(self.safe_locations, k=num_players)
+        players = []
+        for i in range(num_players):
+            players.append(Player(initial_location=player_locations[i].copy(), name=player_names[i], board=self))
+        return players
 
 def _exit_location_compatible_with_river(exit_locations, river_tiles, board_height, board_width):
     river_tile_locations = [river_tile.location for river_tile in river_tiles]
@@ -194,3 +204,10 @@ def _create_safe_tile_matrix(width: int, height: int):
             matrix_row.append(Safe(Location(x=x, y=y)))
         matrix.append(matrix_row)
     return matrix
+
+# For debugging only
+def debug_board_tiles(board):
+    for x in range(board.width):
+        for y in range(board.height):
+            tile = board.grid[x][y]
+            print(f"Assigned {str(tile)} tile to {tile.location} at grid[{x}][{y}]")

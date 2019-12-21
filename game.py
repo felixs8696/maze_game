@@ -13,11 +13,12 @@ from exceptions import GameOver
 
 
 class Game:
-    def __init__(self, board: Board, players: List[Player]):
+    def __init__(self, board: Board, players: List[Player], display_all_info_each_turn=False):
         self.board = board
         self.players = self._randomize_player_order(players)
         self.active_player_index = 0
         self.game_over = False
+        self.display_all_info_each_turn = display_all_info_each_turn
 
     def display_player_statuses(self):
         headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']
@@ -198,21 +199,19 @@ class Game:
     def begin_game(self):
         print()
         print('Beginning game...\n')
-        # print(f'Player order: ', [player.name for player in self.players])
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
             other_players = [player for player in self.players if not player == active_player]
             active_player.begin_turn()
-            # available_tile_actions = []
             tile = self.board.get_tile(active_player.location)
             available_tile_actions = tile.get_optional_actions(active_player)
             while not active_player.is_turn_over(other_players=other_players,
                                                  board=self.board,
                                                  available_tile_actions=available_tile_actions):
-                print(f"{[str(ex) for ex in self.board.exits]}")
-                self.display_board()
-                self.display_player_statuses()
+                if self.display_all_info_each_turn:
+                    self.display_board()
+                    self.display_player_statuses()
                 print(f"\n{active_player.name}'s Turn.")
                 original_location = active_player.location.copy()
                 chosen_move = active_player.request_move(other_players=other_players,
@@ -225,8 +224,6 @@ class Game:
                     self.display_board()
                     self.display_player_statuses()
                     exit(0)
-                # tile = self.board.get_tile(active_player.location)
-                # available_tile_actions = tile.get_optional_actions()
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):
                         active_player.execute_mandatory_actions()
