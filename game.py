@@ -10,6 +10,7 @@ from datatypes import Direction
 from symbols import *
 from tabulate import tabulate
 from exceptions import GameOver
+from utils import get_yes_or_no_response, response_is_yes_and_not_empty
 
 
 class Game:
@@ -233,3 +234,11 @@ class Game:
                 available_tile_actions = tile.get_optional_actions(active_player)
             active_player.end_turn()
             self.next_player()
+
+            display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
+            if not self.display_all_info_each_turn:
+                print()
+                peek = get_yes_or_no_response(display_game_info_prompt)
+                if response_is_yes_and_not_empty(peek):
+                    self.display_board()
+                    self.display_player_statuses()

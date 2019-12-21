@@ -6,8 +6,14 @@ def get_yes_or_no_response(prompt):
     return response
 
 
+def response_is_yes_and_not_empty(response):
+    if response != '':
+        return response.lower() == 'yes' or response in "Yy"
+    return False
+
+
 def response_is_yes(response):
-    return response in "Yy"
+    return response.lower() == 'yes' or response in "Yy"
 
 
 def response_is_no(response):
