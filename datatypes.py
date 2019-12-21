@@ -49,10 +49,8 @@ class TileType(Enum):
     RIVER = 3
     HOSPITAL = 4
     SHOP = 5
-    A_PORTAL = 6
-    AB_PORTAL = 7
-    ABC_PORTAL = 8
-    TREASURE = 9
+    PORTAL = 6
+    TREASURE = 7
 
 
 class BorderWallType(Enum):

@@ -184,7 +184,6 @@ class Player:
 
     def teleport_to(self, location: Location):
         self.location.teleport(location)
-        print(f"{self.name} has entered and exited a portal.")
 
     def flush_one_tile(self, direction: Direction):
         try:
@@ -210,9 +209,6 @@ class Player:
 
     def do_nothing(self):
         print(f'{self.name} does nothing')
-
-    def announce_safety(self):
-        print(f'{self.name} is safe.')
 
     def show_colliding_players(self, other_players):
         colliding_players = self.get_colliding_players(other_players=other_players)

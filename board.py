@@ -1,7 +1,7 @@
 import random
 
 from datatypes import TileType, TileCategories, Direction
-from tiles import TileFactory, Tile, Safe
+from tiles import TileFactory, Tile, Safe, PortalType
 from location import Location
 from borders import Wall, Exit
 from player import Player
@@ -23,9 +23,11 @@ class Board:
             },
             TileCategories.DYNAMIC: {
                 TileType.RIVER: num_river_tiles,
-                TileType.A_PORTAL: num_aa_portal_sets,
-                TileType.AB_PORTAL: num_ab_portal_sets,
-                TileType.ABC_PORTAL: num_abc_portal_sets
+                TileType.PORTAL: {
+                    PortalType.A: num_aa_portal_sets,
+                    PortalType.AB: num_ab_portal_sets,
+                    PortalType.ABC: num_abc_portal_sets
+                }
             }
         }
 
@@ -88,20 +90,23 @@ class Board:
         for river_tile in river_tiles:
             safe_locations = self._assign_tile_to_grid(tile=river_tile, remaining_locations=safe_locations)
 
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.A_PORTAL]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.A_PORTAL]} AA portal sets...')
+        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]):
+            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]} '
+                  f'AA portal sets...')
             aa_portal = TileFactory.create_type_a_portal_tile(location=random.choice(list(safe_locations)))
             safe_locations = self._assign_tile_to_grid(tile=aa_portal, remaining_locations=safe_locations)
 
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.AB_PORTAL]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.AB_PORTAL]} AB portal sets...')
+        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]):
+            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]} '
+                  f'AB portal sets...')
             locations = random.sample(list(safe_locations), k=2)
             ab_portal, ba_portal = TileFactory.create_type_ab_portal_tiles(locations=locations)
             safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
             safe_locations = self._assign_tile_to_grid(tile=ba_portal, remaining_locations=safe_locations)
 
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.ABC_PORTAL]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.ABC_PORTAL]} ABC portal sets...')
+        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]):
+            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]} '
+                  f'ABC portal sets...')
             locations = random.sample(list(safe_locations), k=3)
             ab_portal, bc_portal, ca_portal = TileFactory.create_type_abc_portal_tiles(locations=locations)
             safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)

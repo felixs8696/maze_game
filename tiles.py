@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 from items import RustyBullet, FirstAidKit, PileOfJunk
 from datatypes import PortalType, Direction, BorderWallType
-from actions import AnnounceSafety, AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
+from actions import AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
 from location import Location
 from datatypes import TileType
 from symbols import *
@@ -25,6 +25,10 @@ class Tile(ABC):
             return symbol_with_treasure(self.symbol)
         else:
             return self.symbol
+
+    @abstractmethod
+    def announce_tile(self, player):
+        pass
 
     def has_treasure(self):
         return self.num_treasure > 0
@@ -59,8 +63,14 @@ class Safe(Tile):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [AnnounceSafety(is_mandatory=True)]
+        self._actions = []
         self.symbol = SAFE_SYMBOL
+        self.type = TileType.SAFE
+
+    def announce_tile(self, player):
+        print(f"{player.name} walks into a {TileType.SAFE.name} clearing.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
 
     def description(self):
         return f"You are safe."
@@ -72,6 +82,12 @@ class Marsh(Tile):
         super().__init__(location)
         self._actions = [LoseTurn(is_mandatory=True)]
         self.symbol = MARSH_SYMBOL
+        self.type = TileType.MARSH
+
+    def announce_tile(self, player):
+        print(f"{player.name} sinks into a {TileType.MARSH.name}.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
 
     def description(self):
         return f"You lose your next turn."
@@ -84,6 +100,12 @@ class Shop(Tile):
         self.items = [RustyBullet(), FirstAidKit(), PileOfJunk()]
         self._actions = [BuyItem(items=self.items)]
         self.symbol = SHOP_SYMBOL
+        self.type = TileType.SHOP
+
+    def announce_tile(self, player):
+        print(f"{player.name} enters a RANDOM ITEM {TileType.SHOP.name}.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
 
     def get_actions(self, player) -> List[Action]:
         actions = []
@@ -105,6 +127,22 @@ class Hospital(Tile):
         super().__init__(location)
         self._actions = [Heal()]
         self.symbol = HOSPITAL_SYMBOL
+        self.type = TileType.HOSPITAL
+
+    def announce_tile(self, player):
+        print(f"{player.name} enters a {TileType.HOSPITAL.name}.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+
+    def get_actions(self, player) -> List[Action]:
+        actions = []
+        if player.is_injured():
+            actions = self._actions
+
+        if self.has_treasure():
+            actions += [AcquireTreasure()]
+
+        return actions
 
     def description(self):
         return f"You have entered the hospital."
@@ -118,6 +156,12 @@ class Portal(Tile, ABC):
         self.symbol = name
         self.exit_location = exit_location
         self._actions = [Teleport(self.exit_location, is_mandatory=True)]
+        self.type = TileType.PORTAL
+
+    def announce_tile(self, player):
+        print(f"{player.name} enters and exits a portal.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
 
     def description(self):
         return f"You have landed on a portal tile."
@@ -139,6 +183,12 @@ class River(Tile, ABC):
             self.symbol = RIVER_R_SYMBOL
         else:
             raise InvalidDirection(f"Invalid direction {direction.name} for river tile.")
+        self.type = TileType.RIVER
+
+    def announce_tile(self, player):
+        print(f"{player.name} swims into the {TileType.RIVER.name}.")
+        if self.has_treasure():
+            print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
 
     def description(self):
         return f"You have landed on a river tile."

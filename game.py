@@ -6,7 +6,7 @@ from typing import List
 from board import Board
 from player import Player
 from movement import Movement
-from datatypes import Direction
+from datatypes import Direction, TileType
 from symbols import *
 from tabulate import tabulate
 from exceptions import GameOver
@@ -228,6 +228,15 @@ class Game:
                     exit(0)
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):
+                        tile = self.board.get_tile(active_player.location)
+                        tile.announce_tile(active_player)
+                        if tile.type == TileType.HOSPITAL:
+                            if not active_player.is_injured():
+                                print(f"{active_player.name} is not injured, so there is no need to heal.")
+                        elif tile.type == TileType.SHOP:
+                            if active_player.has_item():
+                                print(f"{active_player.name} is already holding an item, so he/she cannot acquire "
+                                      f"another until the held item is dropped.")
                         active_player.execute_mandatory_actions()
                         active_player.show_colliding_players(other_players=other_players)
                 tile = self.board.get_tile(active_player.location)

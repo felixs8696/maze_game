@@ -231,15 +231,6 @@ class DoNothing(Action):
         return f"You do nothing."
 
 
-class AnnounceSafety(Action):
-
-    def affect_player(self, player, **kwargs):
-        player.announce_safety()
-
-    def description(self):
-        return f"You are safe."
-
-
 def ask_for_options(actions):
     actions_options = ""
     range_of_actions = range(len(actions))
