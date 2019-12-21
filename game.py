@@ -210,6 +210,7 @@ class Game:
                                                  board=self.board,
                                                  available_tile_actions=available_tile_actions):
                 if self.display_all_info_each_turn:
+                    print()
                     self.display_board()
                     self.display_player_statuses()
                 print(f"\n{active_player.name}'s Turn.")
