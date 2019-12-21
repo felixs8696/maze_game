@@ -32,3 +32,7 @@ class NoTreasureOnTile(Exception):
 
 class InvalidDirection(Exception):
     pass
+
+
+class UnknownGameIndex(Exception):
+    pass

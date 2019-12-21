@@ -74,7 +74,7 @@ class Board:
         return remaining_locations
 
     def generate_contents(self):
-        print('Generating board...')
+        print('Generating board (This may take a while)...')
         self.grid = _create_safe_tile_matrix(width=self.width, height=self.height)
         safe_locations = set(self.grid[x][y].location for x in range(self.width) for y in range(self.height))
 
