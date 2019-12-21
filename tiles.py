@@ -9,6 +9,7 @@ from actions import AnnounceSafety, AcquireTreasure, Action, DoNothing, LoseTurn
 from location import Location
 from datatypes import TileType
 from symbols import *
+from exceptions import NoTreasureOnTile, InvalidDirection
 
 
 class Tile(ABC):
@@ -16,12 +17,39 @@ class Tile(ABC):
     def __init__(self, location: Location):
         self.location = location
         self._actions = []
+        self.num_treasure = 0
+        self.symbol = EMPTY
 
-    @abstractmethod
     def __str__(self):
-        pass
+        if self.has_treasure():
+            return symbol_with_treasure(self.symbol)
+        else:
+            return self.symbol
+
+    def has_treasure(self):
+        return self.num_treasure > 0
+
+    def add_treasure(self):
+        self.num_treasure += 1
+
+    def remove_treasure(self):
+        if self.has_treasure():
+            self.num_treasure -= 1
+        else:
+            raise NoTreasureOnTile(f"There is no treasure on this tile.")
+
+    def get_optional_actions(self, player):
+        optional_actions = []
+        for action in self.get_actions(player):
+            if not action.is_mandatory:
+                optional_actions.append(action)
+        print(f"all_actions: {self.get_actions(player)}")
+        print(f"optional_actions: {optional_actions}")
+        return optional_actions
 
     def get_actions(self, player) -> List[Action]:
+        if self.has_treasure():
+            return self._actions + [AcquireTreasure()]
         return self._actions
 
     @abstractmethod
@@ -34,9 +62,7 @@ class Safe(Tile):
     def __init__(self, location: Location):
         super().__init__(location)
         self._actions = [AnnounceSafety(is_mandatory=True)]
-
-    def __str__(self):
-        return SAFE_SYMBOL
+        self.symbol = SAFE_SYMBOL
 
     def description(self):
         return f"You are safe."
@@ -47,9 +73,7 @@ class Marsh(Tile):
     def __init__(self, location: Location):
         super().__init__(location)
         self._actions = [LoseTurn(is_mandatory=True)]
-
-    def __str__(self):
-        return MARSH_SYMBOL
+        self.symbol = MARSH_SYMBOL
 
     def description(self):
         return f"You lose your next turn."
@@ -62,13 +86,15 @@ class Shop(Tile):
         self.items = [RustyBullet(), FirstAidKit(), PileOfJunk()]
         self._actions = [BuyItem(items=self.items)]
 
-    def __str__(self):
-        return SHOP_SYMBOL
-
     def get_actions(self, player) -> List[Action]:
+        actions = []
         if not player.has_item():
-            return self._actions
-        return []
+            actions = self._actions
+
+        if self.has_treasure():
+            actions += [AcquireTreasure()]
+
+        return actions
 
     def description(self):
         return f"You have entered a shop."
@@ -80,9 +106,6 @@ class Hospital(Tile):
         super().__init__(location)
         self._actions = [Heal()]
 
-    def __str__(self):
-        return HOSPITAL_SYMBOL
-
     def description(self):
         return f"You have entered the hospital."
 
@@ -92,12 +115,9 @@ class Portal(Tile, ABC):
     def __init__(self, location: Location, exit_location: Location, portal_type: PortalType, name: str):
         super().__init__(location)
         self.type = portal_type
-        self.name = name
+        self.symbol = name
         self.exit_location = exit_location
         self._actions = [Teleport(self.exit_location, is_mandatory=True)]
-
-    def __str__(self):
-        return self.name
 
     def description(self):
         return f"You have landed on a portal tile."
@@ -109,32 +129,19 @@ class River(Tile, ABC):
         super().__init__(location)
         self.direction = direction
         self._actions = [Flush(self.direction, is_mandatory=True)]
-
-    def __str__(self):
         if self.direction == Direction.UP:
-            return RIVER_U_SYMBOL
-        if self.direction == Direction.DOWN:
-            return RIVER_D_SYMBOL
-        if self.direction == Direction.LEFT:
-            return RIVER_L_SYMBOL
-        if self.direction == Direction.RIGHT:
-            return RIVER_R_SYMBOL
+            self.symbol = RIVER_U_SYMBOL
+        elif self.direction == Direction.DOWN:
+            self.symbol = RIVER_D_SYMBOL
+        elif self.direction == Direction.LEFT:
+            self.symbol = RIVER_L_SYMBOL
+        elif self.direction == Direction.RIGHT:
+            self.symbol = RIVER_R_SYMBOL
+        else:
+            raise InvalidDirection(f"Invalid direction {direction.name} for river tile.")
 
     def description(self):
         return f"You have landed on a river tile."
-
-
-class Treasure(Tile, ABC):
-
-    def __init__(self, location: Location):
-        super().__init__(location)
-        self._actions = [AcquireTreasure()]
-
-    def __str__(self):
-        return TREASURE_SYMBOL
-
-    def description(self):
-        return f"You have entered a treasure room."
 
 
 class TileFactory:
@@ -145,14 +152,14 @@ class TileFactory:
             return Safe(location=location)
         if tile_type == TileType.MARSH:
             return Marsh(location=location)
-        if tile_type == TileType.RIVER:
-            return River(location=location, direction=direction)
         if tile_type == TileType.HOSPITAL:
             return Hospital(location=location)
         if tile_type == TileType.SHOP:
             return Shop(location=location)
         if tile_type == TileType.TREASURE:
-            return Treasure(location=location)
+            treasure_tile = Safe(location=location)
+            treasure_tile.add_treasure()
+            return treasure_tile
 
     @staticmethod
     def create_full_river(board_height: int, max_num_turns: int, board_width: int, max_river_length: int):

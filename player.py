@@ -9,7 +9,7 @@ from tiles import Tile
 from location import Location
 from utils import ask_for_options, get_yes_or_no_response, response_is_yes
 from exceptions import MoveBlockedByWall, ExitFound, GameOver
-from actions import Fight, EndTurn
+from actions import Fight, EndTurn, DropTreasure
 
 from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
@@ -19,7 +19,7 @@ class Player:
         self.name = name
         self.status = StatusType.HEALTHY
         self.item = None
-        self.treasure = None
+        self.has_treasure = False
         self.can_move = True
         self.active = False
         self.location = initial_location
@@ -64,7 +64,7 @@ class Player:
             self.can_move = False
             print(f'{self.name} moves {direction.name}.')
         except ExitFound as e:
-            if self.has_treasure():
+            if self.has_treasure:
                 raise GameOver(f"{self.name} has exited the maze with the treasure and won the game.")
             else:
                 print(f"{self.name} has found an exit, but has no treasure.")
@@ -72,14 +72,12 @@ class Player:
             print(f'{self.name} cannot move {direction.name}. Blocked by wall.')
             self.can_move = True
 
-    def execute_mandatory_actions_and_get_remaining(self, game_tile_actions):
-        remaining_actions = []
+    def execute_mandatory_actions(self):
+        tile = self.board.get_tile(self.location)
+        game_tile_actions = tile.get_actions(self)
         for action in game_tile_actions:
             if action.is_mandatory:
                 action.affect_player(self)
-            else:
-                remaining_actions.append(action)
-        return remaining_actions
 
     def execute_move(self, move: Move):
         move.affect_player(self)
@@ -109,6 +107,8 @@ class Player:
         possible_fights = self._get_possible_fights(other_players=other_players)
         possible_actions.extend(possible_fights)
         possible_actions.extend(available_tile_actions)
+        if self.has_treasure:
+            possible_actions.extend([DropTreasure()])
         return possible_actions
 
     def request_move(self, other_players, board, available_tile_actions) -> Move:
@@ -142,11 +142,19 @@ class Player:
     def has_item(self):
         return self.item is not None
 
-    def has_treasure(self):
-        return self.treasure is not None
+    def acquire_treasure(self):
+        x, y = self.location.get_coordinates()
+        tile = self.board.grid[x][y]
+        assert tile.has_treasure()
+        if not self.has_treasure:
+            print(f"{self.name} has acquired a pile of treasure.")
+            self.has_treasure = True
+            tile.remove_treasure()
+        else:
+            raise TreasureAlreadyHeldError
 
     def acquire_item(self, item: ItemType):
-        if self.item is None:
+        if not self.has_item():
             print(f"{self.name} has acquired a {str(item)}.")
             self.item = item
         else:
@@ -164,9 +172,12 @@ class Player:
             raise NoItemHeldError
 
     def drop_treasure(self):
-        if self.treasure is not None:
-            self.treasure = None
-            print(f"{self.name} has dropped his/her treasure.")
+        x, y = self.location.get_coordinates()
+        tile = self.board.grid[x][y]
+        if self.has_treasure:
+            self.has_treasure = False
+            tile.add_treasure()
+            print(f"{self.name} has dropped his/her pile of treasure.")
         else:
             print(f"{self.name} has no treasure to drop.")
             raise NoTreasureHeldError

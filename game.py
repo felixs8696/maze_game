@@ -20,11 +20,11 @@ class Game:
         self.game_over = False
 
     def display_player_statuses(self):
-        headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Treasure', 'Can Move', 'Lost Next Turn']
+        headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']
         player_data = []
         for player in self.players:
-            data = [player.active, player.name, player.location, player.status.name, str(player.item), player.treasure,
-                    player.can_move, player.lose_next_turn]
+            data = [player.active, player.name, player.location, player.status.name, str(player.item),
+                    player.has_treasure, player.can_move, player.lose_next_turn]
             data = [x if x is not None else 'None' for x in data]
             player_data.append(data)
         print()
@@ -204,7 +204,9 @@ class Game:
             active_player = self.players[self.active_player_index]
             other_players = [player for player in self.players if not player == active_player]
             active_player.begin_turn()
-            available_tile_actions = []
+            # available_tile_actions = []
+            tile = self.board.get_tile(active_player.location)
+            available_tile_actions = tile.get_optional_actions(active_player)
             while not active_player.is_turn_over(other_players=other_players,
                                                  board=self.board,
                                                  available_tile_actions=available_tile_actions):
@@ -223,13 +225,13 @@ class Game:
                     self.display_board()
                     self.display_player_statuses()
                     exit(0)
-                available_tile_actions = []
+                # tile = self.board.get_tile(active_player.location)
+                # available_tile_actions = tile.get_optional_actions()
                 if active_player.location != original_location:
                     if isinstance(chosen_move, Movement):
-                        tile = self.board.get_tile(active_player.location)
-                        game_tile_actions = tile.get_actions(active_player)
-                        available_tile_actions = \
-                            active_player.execute_mandatory_actions_and_get_remaining(game_tile_actions)
+                        active_player.execute_mandatory_actions()
                         active_player.show_colliding_players(other_players=other_players)
+                tile = self.board.get_tile(active_player.location)
+                available_tile_actions = tile.get_optional_actions(active_player)
             active_player.end_turn()
             self.next_player()
