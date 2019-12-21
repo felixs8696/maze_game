@@ -78,17 +78,19 @@ def ask_and_get_player_names_for_playable_board(num_players):
     player_names = []
     while len(player_names) < num_players:
         player_names.append(input('Player name: '))
+    print()
     return player_names
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--random_board", help="Set this glad to use a randomly chosen board.",
+    parser.add_argument("-r", "--random_board", help="Set this flag to use a randomly chosen board.",
                         action="store_true")
     parser.add_argument("-g", "--game_seed", help="Select seed of known game board from 0 to 2**32.", type=int,
                         default=-1)
     parser.add_argument("-i", "--playable_game_index", help="Chosen game index from playable game index.", type=int,
                         default=-1)
+    parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")
     args = parser.parse_args()
 
     if args.playable_game_index == -1:
@@ -132,7 +134,7 @@ if __name__ == '__main__':
     random.seed(random_seed)
     board = Board(**board_config)
     players = board.generate_safe_players(player_names=player_names)
-    game = Game(board=board, players=players, display_all_info_each_turn=True)
+    game = Game(board=board, players=players, display_all_info_each_turn=args.omniscient)
 
     print(f"Starting game...")
     current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)

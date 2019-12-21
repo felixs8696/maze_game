@@ -169,6 +169,8 @@ class Board:
             self.exits.append(Exit(location=location, direction=direction))
 
         print('Done.')
+        print()
+
         return random.sample(safe_locations, k=len(safe_locations))
 
     def get_tile(self, location):
