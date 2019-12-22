@@ -1,3 +1,8 @@
+import os
+import _pickle as pickle
+
+from constants import *
+
 def get_yes_or_no_response(prompt):
     response = input(prompt)
     while response not in "YyNn":
@@ -64,3 +69,19 @@ def generate_dice_roll_map(one=None, two=None, three=None, four=None, five=None,
 
     return dice_map
 
+
+def get_backup_file_path(restore_game_id):
+    return os.path.join(GAME_BACKUP_DIR, f'{restore_game_id}.pkl')
+
+
+def save_game_backup(game, restore_game_id):
+    game_backup_file_path = get_backup_file_path(restore_game_id)
+    with open(game_backup_file_path, 'wb+') as f:
+        pickle.dump(game, f)
+
+
+def load_game_from_backup(restore_game_id):
+    game_backup_file_path = get_backup_file_path(restore_game_id)
+    with open(game_backup_file_path, 'rb') as f:
+        game = pickle.load(f)
+    return game

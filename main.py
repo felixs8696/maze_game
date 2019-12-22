@@ -1,13 +1,15 @@
 import random
 import argparse
 import json
+import os
+import uuid
+import _pickle as pickle
 
 from game import Game
 from board import Board
 from constants import *
 from game_board_configs import *
-from exceptions import UnknownGameIndex
-from utils import ask_for_options, get_yes_or_no_response, response_is_yes
+from utils import load_game_from_backup
 
 
 def ask_for_board_config():
@@ -81,10 +83,10 @@ def ask_and_get_player_names_for_playable_board(num_players):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--random_board", help="Set this flag to use a randomly chosen board.",
+    parser.add_argument("-r", "--restore_game_id", help="Enter a game id estore an unfinished game.", type=str,
+                        default=None)
+    parser.add_argument("-n", "--new_random_board", help="Set this flag to use a randomly chosen board.",
                         action="store_true")
-    parser.add_argument("-g", "--game_seed", help="Select seed of known game board from 0 to 2**32.", type=int,
-                        default=-1)
     parser.add_argument("-i", "--playable_game_index", help="Chosen game index from playable game index.", type=int,
                         default=-1)
     parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
@@ -93,53 +95,50 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")
     args = parser.parse_args()
 
-    if args.playable_game_index == -1:
-        random_seed = random.randint(MIN_GAME_SEED, MAX_GAME_SEED)
+    if not os.path.exists(GAME_BACKUP_DIR):
+        os.mkdir(GAME_BACKUP_DIR)
 
-        try:
-            if not args.random_board:
-                if not MIN_GAME_SEED <= args.game_seed < MAX_GAME_SEED:
-                    raise UnknownGameIndex(f"ERROR: Unknown game seed: "
-                                           f"Please set game_seed to some number x where "
-                                           f"{MIN_GAME_SEED} <= x < {MAX_GAME_SEED}. "
-                                           f"Type `python3 main.py --help` for assistance.")
-                random_seed = args.game_seed
-            else:
-                random_seed = random.randint(MIN_GAME_SEED, MAX_GAME_SEED)
+    if args.restore_game_id is None:
+        restore_game_id = str(uuid.uuid4())
+        print(f"Your restore_game_id is {restore_game_id}. Run `python main.py -r {restore_game_id}` to "
+              f"restore your game if it crashes")
 
-        except UnknownGameIndex as e:
-            print(f"{e}")
-            print(f"These game boards are known to be playable: {json.dumps(PLAYABLE_GAME_BOARDS, indent=2)}")
-            exit(0)
+        if args.playable_game_index == -1:
+            random_seed = random.randint(MIN_GAME_SEED, MAX_GAME_SEED)
+            board_config = ask_for_board_config()
+            player_names = ask_and_get_player_names()
+            if not player_names:
+                print(f"Not enough players. Quitting game.")
+                exit(0)
+        else:
+            if args.playable_game_index >= len(PLAYABLE_GAME_BOARDS):
+                print(f"Invalid --playable_game_index. Please choose a number in this range "
+                      f"[0, {len(PLAYABLE_GAME_BOARDS) - 1}]")
+                exit(0)
 
-        board_config = ask_for_board_config()
+            print(f"Loading board from valid playable_game_index ({args.playable_game_index}). "
+                  f"Ignoring all other command line arguments.")
+            chosen_board_config = PLAYABLE_GAME_BOARDS[args.playable_game_index]
+            random_seed = chosen_board_config[GAME_SEED]
+            board_config = chosen_board_config[BOARD_CONFIG]
+            player_names = ask_and_get_player_names_for_playable_board(num_players=chosen_board_config[NUM_PLAYERS])
 
-        player_names = ask_and_get_player_names()
-        if not player_names:
-            print(f"Not enough players. Quitting game.")
-            exit(0)
+        random.seed(random_seed)
+        board = Board(**board_config, auto_rng=args.auto_rng)
+        players = board.generate_safe_players(player_names=player_names)
+        game = Game(board=board, players=players, restore_game_id=restore_game_id, display_all_info_each_turn=args.omniscient)
+
+        print(f"Starting game...")
+        current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)
+        print(f"This is your game config. If you like this board and it does not already exist in the playable game "
+              f"database, please add this config to the database, so you can repeat this game: "
+              f"{json.dumps(current_game_board_config, indent=2)}")
+
+        game_backup_file_path = os.path.join(GAME_BACKUP_DIR, f'{restore_game_id}.pkl')
+        with open(game_backup_file_path, 'wb+') as f:
+            pickle.dump(game, f)
     else:
-        if args.playable_game_index >= len(PLAYABLE_GAME_BOARDS):
-            print(f"Invalid --playable_game_index. Please choose a number in this range "
-                  f"[0, {len(PLAYABLE_GAME_BOARDS) - 1}]")
-            exit(0)
-
-        print(f"Loading board from valid playable_game_index ({args.playable_game_index}). "
-              f"Ignoring all other command line arguments.")
-        chosen_board_config = PLAYABLE_GAME_BOARDS[args.playable_game_index]
-        random_seed = chosen_board_config[GAME_SEED]
-        board_config = chosen_board_config[BOARD_CONFIG]
-        player_names = ask_and_get_player_names_for_playable_board(num_players=chosen_board_config[NUM_PLAYERS])
-
-    random.seed(random_seed)
-    board = Board(**board_config, auto_rng=args.auto_rng)
-    players = board.generate_safe_players(player_names=player_names)
-    game = Game(board=board, players=players, display_all_info_each_turn=args.omniscient)
-
-    print(f"Starting game...")
-    current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)
-    print(f"This is your game config. If you like this board and it does not already exist in the playable game "
-          f"database, please add this config to the database, so you can repeat this game: "
-          f"{json.dumps(current_game_board_config, indent=2)}")
+        restore_game_id = args.restore_game_id
+        game = load_game_from_backup(restore_game_id=restore_game_id)
 
     game.begin_game()

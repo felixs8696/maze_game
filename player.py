@@ -83,6 +83,7 @@ class Player:
     def execute_move(self, move: Move):
         move.affect_player(self)
 
+
     def get_colliding_players(self, other_players):
         colliding_players = []
         for player in other_players:

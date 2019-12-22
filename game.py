@@ -10,15 +10,16 @@ from datatypes import Direction, TileType
 from symbols import *
 from tabulate import tabulate
 from exceptions import GameOver
-from utils import get_yes_or_no_response, response_is_yes_and_not_empty
+from utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
 
 
 class Game:
-    def __init__(self, board: Board, players: List[Player], display_all_info_each_turn=False):
+    def __init__(self, board: Board, players: List[Player], restore_game_id, display_all_info_each_turn=False):
         self.board = board
         self.players = self._randomize_player_order(players)
         self.active_player_index = 0
         self.game_over = False
+        self.restore_game_id = restore_game_id
         self.display_all_info_each_turn = display_all_info_each_turn
 
     def display_player_statuses(self):
@@ -212,6 +213,7 @@ class Game:
                 while not active_player.is_turn_over(other_players=other_players,
                                                      board=self.board,
                                                      available_tile_actions=available_tile_actions):
+                    save_game_backup(game=self, restore_game_id=self.restore_game_id)
                     if self.display_all_info_each_turn:
                         print()
                         self.display_board()
@@ -221,8 +223,7 @@ class Game:
                     chosen_move = active_player.request_move(other_players=other_players,
                                                              board=self.board,
                                                              available_tile_actions=available_tile_actions)
-                    try:
-                        active_player.execute_move(chosen_move)
+                    active_player.execute_move(chosen_move)
                     if active_player.location != original_location:
                         if isinstance(chosen_move, Movement):
                             tile = self.board.get_tile(active_player.location)
