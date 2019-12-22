@@ -190,6 +190,11 @@ class Player:
         try:
             self.location.move(direction, self.board)
             print(f"{self.name} is flushed by the river one tile.")
+        except ExitFound as e:
+            if self.has_treasure:
+                raise GameOver(f"{self.name} has been flushed out of the maze with the treasure and won the game.")
+            else:
+                print(f"{self.name} has been flushed into an exit, but has no treasure, so does not move farther.")
         except MoveBlockedByWall as e:
             print(f"The river tries to flush {self.name}, but a wall prevents him/her from moving.")
 

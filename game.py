@@ -201,53 +201,55 @@ class Game:
         print()
         print('Beginning game...\n')
 
+
         while not self.game_over:
             active_player = self.players[self.active_player_index]
             other_players = [player for player in self.players if not player == active_player]
             active_player.begin_turn()
             tile = self.board.get_tile(active_player.location)
             available_tile_actions = tile.get_optional_actions(active_player)
-            while not active_player.is_turn_over(other_players=other_players,
-                                                 board=self.board,
-                                                 available_tile_actions=available_tile_actions):
-                if self.display_all_info_each_turn:
-                    print()
-                    self.display_board()
-                    self.display_player_statuses()
-                print(f"\n{active_player.name}'s Turn.")
-                original_location = active_player.location.copy()
-                chosen_move = active_player.request_move(other_players=other_players,
-                                                         board=self.board,
-                                                         available_tile_actions=available_tile_actions)
-                try:
-                    active_player.execute_move(chosen_move)
-                except GameOver as e:
-                    print(f"{active_player.name} has exited the maze with the treasure and won the game.")
-                    self.display_board()
-                    self.display_player_statuses()
-                    exit(0)
-                if active_player.location != original_location:
-                    if isinstance(chosen_move, Movement):
-                        tile = self.board.get_tile(active_player.location)
-                        tile.announce_tile(active_player)
-                        if tile.type == TileType.HOSPITAL:
-                            if not active_player.is_injured():
-                                print(f"{active_player.name} is not injured, so there is no need to heal.")
-                        elif tile.type == TileType.SHOP:
-                            if active_player.has_item():
-                                print(f"{active_player.name} is already holding an item, so he/she cannot acquire "
-                                      f"another until the held item is dropped.")
-                        active_player.execute_mandatory_actions()
-                        active_player.show_colliding_players(other_players=other_players)
-                tile = self.board.get_tile(active_player.location)
-                available_tile_actions = tile.get_optional_actions(active_player)
-            active_player.end_turn()
-            self.next_player()
+            try:
+                while not active_player.is_turn_over(other_players=other_players,
+                                                     board=self.board,
+                                                     available_tile_actions=available_tile_actions):
+                    if self.display_all_info_each_turn:
+                        print()
+                        self.display_board()
+                        self.display_player_statuses()
+                    print(f"\n{active_player.name}'s Turn.")
+                    original_location = active_player.location.copy()
+                    chosen_move = active_player.request_move(other_players=other_players,
+                                                             board=self.board,
+                                                             available_tile_actions=available_tile_actions)
+                    try:
+                        active_player.execute_move(chosen_move)
+                    if active_player.location != original_location:
+                        if isinstance(chosen_move, Movement):
+                            tile = self.board.get_tile(active_player.location)
+                            tile.announce_tile(active_player)
+                            if tile.type == TileType.HOSPITAL:
+                                if not active_player.is_injured():
+                                    print(f"{active_player.name} is not injured, so there is no need to heal.")
+                            elif tile.type == TileType.SHOP:
+                                if active_player.has_item():
+                                    print(f"{active_player.name} is already holding an item, so he/she cannot acquire "
+                                          f"another until the held item is dropped.")
+                            active_player.execute_mandatory_actions()
+                            active_player.show_colliding_players(other_players=other_players)
+                    tile = self.board.get_tile(active_player.location)
+                    available_tile_actions = tile.get_optional_actions(active_player)
+                active_player.end_turn()
+                self.next_player()
 
-            display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
-            if not self.display_all_info_each_turn:
-                print()
-                peek = get_yes_or_no_response(display_game_info_prompt)
-                if response_is_yes_and_not_empty(peek):
-                    self.display_board()
-                    self.display_player_statuses()
+                display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
+                if not self.display_all_info_each_turn:
+                    print()
+                    peek = get_yes_or_no_response(display_game_info_prompt)
+                    if response_is_yes_and_not_empty(peek):
+                        self.display_board()
+                        self.display_player_statuses()
+            except GameOver as e:
+                print(f"{active_player.name} has exited the maze with the treasure and won the game.")
+                self.display_board()
+                self.display_player_statuses()
+                exit(0)
