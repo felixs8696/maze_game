@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from move import Move
 from utils import get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
-from datatypes import Direction, MoveType, StatusType
+from datatypes import Direction, MoveType, StatusType, TileType
 from location import Location
 
 
