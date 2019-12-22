@@ -31,7 +31,7 @@ def ask_for_options(objects):
     for i in range_of_objects:
         objects_options += f"({i}) {objects[i].description()}\n"
     print(f"{objects_options}")
-    index = input("Please choose one of the above options: ")
+    index = input("Please choose one of the above options (Press CTRL+C to quit the game): ")
     return index
 
 
@@ -70,18 +70,27 @@ def generate_dice_roll_map(one=None, two=None, three=None, four=None, five=None,
     return dice_map
 
 
-def get_backup_file_path(restore_game_id):
-    return os.path.join(GAME_BACKUP_DIR, f'{restore_game_id}.pkl')
+def get_backup_file_path(game_id):
+    return os.path.join(GAME_BACKUP_DIR, f'{game_id}.pkl')
 
 
-def save_game_backup(game, restore_game_id):
-    game_backup_file_path = get_backup_file_path(restore_game_id)
+def delete_game_backup(game_id):
+    game_backup_file_path = get_backup_file_path(game_id)
+    if os.path.exists(game_backup_file_path):
+        os.remove(game_backup_file_path)
+        print(f"Deleted {game_backup_file_path}.")
+    else:
+        print(f"Save file {game_backup_file_path} doesn't exist. Nothing to delete.")
+
+
+def save_game_backup(game, game_id):
+    game_backup_file_path = get_backup_file_path(game_id)
     with open(game_backup_file_path, 'wb+') as f:
         pickle.dump(game, f)
 
 
-def load_game_from_backup(restore_game_id):
-    game_backup_file_path = get_backup_file_path(restore_game_id)
+def load_game_from_backup(game_id):
+    game_backup_file_path = get_backup_file_path(game_id)
     with open(game_backup_file_path, 'rb') as f:
         game = pickle.load(f)
     return game

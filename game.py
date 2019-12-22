@@ -1,7 +1,7 @@
-import numpy as np
 import random
 
 from typing import List
+from signal import signal, SIGINT
 
 from board import Board
 from player import Player
@@ -14,12 +14,12 @@ from utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_ga
 
 
 class Game:
-    def __init__(self, board: Board, players: List[Player], restore_game_id, display_all_info_each_turn=False):
+    def __init__(self, board: Board, players: List[Player], game_id, display_all_info_each_turn=False):
         self.board = board
         self.players = self._randomize_player_order(players)
         self.active_player_index = 0
         self.game_over = False
-        self.restore_game_id = restore_game_id
+        self.game_id = game_id
         self.display_all_info_each_turn = display_all_info_each_turn
 
     def display_player_statuses(self):
@@ -198,10 +198,15 @@ class Game:
     def next_player(self):
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
 
+    def sigint_handler(self, signal_received, frame):
+        print()
+        print(f"Quitting game {self.game_id}. Run `python main.py -r {self.game_id}` to restore this game")
+        exit(0)
+
     def begin_game(self):
+        signal(SIGINT, self.sigint_handler)
         print()
         print('Beginning game...\n')
-
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
@@ -213,7 +218,7 @@ class Game:
                 while not active_player.is_turn_over(other_players=other_players,
                                                      board=self.board,
                                                      available_tile_actions=available_tile_actions):
-                    save_game_backup(game=self, restore_game_id=self.restore_game_id)
+                    save_game_backup(game=self, game_id=self.game_id)
                     if self.display_all_info_each_turn:
                         print()
                         self.display_board()

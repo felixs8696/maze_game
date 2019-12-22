@@ -40,7 +40,7 @@ def ask_for_board_config():
     print(f"Chosen number of ABC portal sets: {num_abc_portal_sets}\n")
     num_treasures = int(input(f"Number of Treasure tiles (Rec: 2, default=2): ") or 2)
     print(f"Chosen number of treasure tiles: {num_treasures}\n")
-    num_inner_walls = int(input(f"Number of Inner Walls (Rec: 10-25, default=10): ") or 10)
+    num_inner_walls = int(input(f"Number of Inner Walls (Rec: 10-25, default=20): ") or 20)
     print(f"Chosen number of inner walls: {num_inner_walls}\n")
     num_exits = int(input(f"Number of Exits (Rec: 2, default=2): ") or 2)
     print(f"Chosen number of exits: {num_exits}\n")
@@ -83,10 +83,8 @@ def ask_and_get_player_names_for_playable_board(num_players):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--restore_game_id", help="Enter a game id estore an unfinished game.", type=str,
+    parser.add_argument("-r", "--game_id", help="Enter a game id to restore an unfinished game.", type=str,
                         default=None)
-    parser.add_argument("-n", "--new_random_board", help="Set this flag to use a randomly chosen board.",
-                        action="store_true")
     parser.add_argument("-i", "--playable_game_index", help="Chosen game index from playable game index.", type=int,
                         default=-1)
     parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
@@ -98,9 +96,9 @@ if __name__ == '__main__':
     if not os.path.exists(GAME_BACKUP_DIR):
         os.mkdir(GAME_BACKUP_DIR)
 
-    if args.restore_game_id is None:
-        restore_game_id = str(uuid.uuid4())
-        print(f"Your restore_game_id is {restore_game_id}. Run `python main.py -r {restore_game_id}` to "
+    if args.game_id is None:
+        game_id = str(uuid.uuid4())
+        print(f"Your game_id is {game_id}. Run `python main.py -r {game_id}` to "
               f"restore your game if it crashes")
 
         if args.playable_game_index == -1:
@@ -126,7 +124,7 @@ if __name__ == '__main__':
         random.seed(random_seed)
         board = Board(**board_config, auto_rng=args.auto_rng)
         players = board.generate_safe_players(player_names=player_names)
-        game = Game(board=board, players=players, restore_game_id=restore_game_id, display_all_info_each_turn=args.omniscient)
+        game = Game(board=board, players=players, game_id=game_id, display_all_info_each_turn=args.omniscient)
 
         print(f"Starting game...")
         current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)
@@ -134,11 +132,11 @@ if __name__ == '__main__':
               f"database, please add this config to the database, so you can repeat this game: "
               f"{json.dumps(current_game_board_config, indent=2)}")
 
-        game_backup_file_path = os.path.join(GAME_BACKUP_DIR, f'{restore_game_id}.pkl')
+        game_backup_file_path = os.path.join(GAME_BACKUP_DIR, f'{game_id}.pkl')
         with open(game_backup_file_path, 'wb+') as f:
             pickle.dump(game, f)
     else:
-        restore_game_id = args.restore_game_id
-        game = load_game_from_backup(restore_game_id=restore_game_id)
+        game_id = args.game_id
+        game = load_game_from_backup(game_id=game_id)
 
     game.begin_game()
