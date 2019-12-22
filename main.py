@@ -54,20 +54,17 @@ def ask_for_board_config():
 def ask_and_get_player_names():
     print("Add players to the game")
     player_names = []
-    new_player_prompt = 'Would you like to add a new player? (y/n): '
-    add_new_player = get_yes_or_no_response(new_player_prompt)
-    while response_is_yes(add_new_player):
+    while True:
         player_name = ''
         while player_name == '':
-            player_name = input("Player name (type 'cancel' to cancel): ")
+            player_name = input("Player name (type 'done' to stop adding players): ")
             if player_name == '':
                 print(f"Invalid player name. Try again.")
-        print()
-        if player_name.lower() != 'cancel':
+        if player_name.lower() != 'done':
             player_names.append(player_name)
         else:
             break
-        add_new_player = get_yes_or_no_response(new_player_prompt)
+
     print(f"Added {player_names} to the game.")
     print()
     return player_names
