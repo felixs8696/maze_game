@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from constants import GAME_BACKUP_DIR
 
@@ -12,13 +13,15 @@ if __name__ == '__main__':
         args = parser.parse_args()
 
         backup_file_path = get_backup_file_path(args.game_id)
-        prompt = f"Are you sure you want to delete the save file for game {args.game_id}? " \
-                 f"This will delete file {backup_file_path} (if it exists). " \
-                 f"(y/n) (default=n):"
-        response = get_yes_or_no_response(prompt)
-        if response_is_yes_and_not_empty(response):
-            delete_game_backup(args.game_id)
+        if os.path.exists(backup_file_path):
+            prompt = f"Are you sure you want to delete the save file for game {args.game_id}? " \
+                     f"This will delete file {backup_file_path}. (y/n) (default=n):"
+            response = get_yes_or_no_response(prompt)
+            if response_is_yes_and_not_empty(response):
+                delete_game_backup(args.game_id)
+            else:
+                print(f"Cancelling. No files deleted.")
         else:
-            print(f"Cancelling. No files deleted.")
+            print(f"Save file for game {args.game_id} does not exist at {backup_file_path}. Nothing to delete.")
     else:
         print(f"No saved games. Save directory '{GAME_BACKUP_DIR}' does not exist.")

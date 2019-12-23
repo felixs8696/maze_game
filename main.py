@@ -9,7 +9,7 @@ from game import Game
 from board import Board
 from constants import *
 from game_board_configs import *
-from utils import load_game_from_backup
+from utils import load_game_from_backup, get_backup_file_path
 
 
 def ask_for_board_config():
@@ -136,7 +136,11 @@ if __name__ == '__main__':
         with open(game_backup_file_path, 'wb+') as f:
             pickle.dump(game, f)
     else:
-        game_id = args.game_id
-        game = load_game_from_backup(game_id=game_id)
+        try:
+            game = load_game_from_backup(game_id=args.game_id)
+        except FileNotFoundError:
+            print(f"No save file found for game {args.game_id} at {get_backup_file_path(game_id=args.game_id)}.")
+            exit(1)
 
+    game.display_all_info_each_turn = args.omniscient
     game.begin_game()
