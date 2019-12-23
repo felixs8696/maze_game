@@ -80,7 +80,7 @@ def delete_game_backup(game_id):
         os.remove(game_backup_file_path)
         print(f"Deleted {game_backup_file_path}.")
     else:
-        print(f"Save file {game_backup_file_path} doesn't exist. Nothing to delete.")
+        print(f"Save file {game_backup_file_path} does not exist. Nothing to delete.")
 
 
 def save_game_backup(game, game_id):
