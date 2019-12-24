@@ -137,7 +137,8 @@ if __name__ == '__main__':
             pickle.dump(game, f)
     else:
         try:
-            game = load_game_from_backup(game_id=args.game_id)
+            saved_game = load_game_from_backup(game_id=args.game_id)
+            game = Game.copy_from(game=saved_game)
         except FileNotFoundError:
             print(f"No save file found for game {args.game_id} at {get_backup_file_path(game_id=args.game_id)}.")
             exit(1)

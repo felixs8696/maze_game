@@ -14,13 +14,28 @@ from utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_ga
 
 
 class Game:
-    def __init__(self, board: Board, players: List[Player], game_id, display_all_info_each_turn=False):
+    def __init__(self, board: Board = None, players: List[Player] = None, randomize_player_order=True,
+                 game_id: str = '',
+                 display_all_info_each_turn=False):
         self.board = board
-        self.players = self._randomize_player_order(players)
+        if randomize_player_order:
+            self.players = self._randomize_player_order(players)
+        else:
+            self.players = players
         self.active_player_index = 0
         self.game_over = False
         self.game_id = game_id
         self.display_all_info_each_turn = display_all_info_each_turn
+
+    @staticmethod
+    def copy_from(game):
+        board = Board.copy_from(board=game.board)
+        players = []
+        for old_player in game.players:
+            player = Player.copy_from(player=old_player)
+            players.append(player)
+        return Game(board=board, players=players, game_id=game.game_id, randomize_player_order=False,
+                    display_all_info_each_turn=game.display_all_info_each_turn)
 
     def display_player_statuses(self):
         headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']

@@ -10,7 +10,8 @@ from player import Player
 class Board:
     def __init__(self, height=8, width=8, river_max_num_turns=2, num_marshes=8, num_river_tiles=12, num_hospitals=1,
                  num_shops=1, num_aa_portal_sets=1, num_ab_portal_sets=1, num_abc_portal_sets=1, num_treasures=2,
-                 num_inner_walls=32, num_exits=2, auto_rng=False):
+                 num_inner_walls=20, num_exits=2, inner_walls=None, exits=None, grid=None,
+                 generate_contents=True, auto_rng=False):
         self.auto_rng = auto_rng
         self.height = height
         self.width = width
@@ -35,12 +36,28 @@ class Board:
         self.river_max_num_turns = river_max_num_turns
         self.num_exits = num_exits
         self.num_inner_walls = num_inner_walls
-        self.inner_walls = None
-        self.exits = None
-        self.grid = None
-        self.border_locations = self._get_border_locations()
-        self.all_locations = [Location(x=x, y=y) for x in range(self.width) for y in range(self.height)]
-        self.safe_locations = self.generate_contents()
+        self.inner_walls = inner_walls
+        self.exits = exits
+        self.grid = grid
+        if generate_contents:
+            self.border_locations = self._get_border_locations()
+            self.all_locations = [Location(x=x, y=y) for x in range(self.width) for y in range(self.height)]
+            self.safe_locations = self.generate_contents()
+
+    @staticmethod
+    def copy_from(board):
+        return Board(height=board.height, width=board.width, river_max_num_turns=board.river_max_num_turns,
+                     num_marshes=board.num_tiles[TileCategories.STATIC][TileType.MARSH],
+                     num_river_tiles=board.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
+                     num_hospitals=board.num_tiles[TileCategories.STATIC][TileType.HOSPITAL],
+                     num_shops=board.num_tiles[TileCategories.STATIC][TileType.SHOP],
+                     num_aa_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A],
+                     num_ab_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB],
+                     num_abc_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC],
+                     num_treasures=board.num_tiles[TileCategories.STATIC][TileType.TREASURE],
+                     num_inner_walls=board.num_inner_walls, num_exits=board.num_exits,
+                     inner_walls=board.inner_walls, exits=board.exits, grid=board.grid, generate_contents=True,
+                     auto_rng=board.auto_rng)
 
     def get_untraversable_locations_from_origin(self, inner_walls):
         queue = [self.all_locations[0]]
@@ -193,6 +210,7 @@ class Board:
                                   auto_rng=self.auto_rng))
         return players
 
+
 def _exit_location_compatible_with_river(exit_locations, river_tiles, board_height, board_width):
     river_tile_locations = [river_tile.location for river_tile in river_tiles]
     loc_to_river_tile_map = {}
@@ -206,6 +224,7 @@ def _exit_location_compatible_with_river(exit_locations, river_tiles, board_heig
                 return False
     return True
 
+
 def _create_safe_tile_matrix(width: int, height: int):
     matrix = []
     for x in range(width):
@@ -214,6 +233,7 @@ def _create_safe_tile_matrix(width: int, height: int):
             matrix_row.append(Safe(Location(x=x, y=y)))
         matrix.append(matrix_row)
     return matrix
+
 
 # For debugging only
 def debug_board_tiles(board):

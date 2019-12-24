@@ -5,7 +5,6 @@ import uuid
 from datatypes import StatusType, ItemType, TreasureType, PortalType, Direction, MoveType
 from move import Move
 from movement import Movement
-from tiles import Tile
 from location import Location
 from utils import ask_for_options, get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
 from exceptions import MoveBlockedByWall, ExitFound, GameOver
@@ -15,21 +14,30 @@ from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHel
 
 
 class Player:
-    def __init__(self, initial_location: Location, name: str, board, auto_rng: bool=False):
+    def __init__(self, name: str = '', location: Location = None, board=None, item=None, has_treasure=False,
+                 can_move=True, active=False, lose_next_turn=False, player_id=uuid.uuid4(), status=StatusType.HEALTHY,
+                 auto_rng: bool = False):
         self.name = name
-        self.status = StatusType.HEALTHY
-        self.item = None
-        self.has_treasure = False
-        self.can_move = True
-        self.active = False
-        self.location = initial_location
-        self.lose_next_turn = False
+        self.location = location
         self.board = board
-        self.player_id = uuid.uuid4()
+        self.item = item
+        self.has_treasure = has_treasure
+        self.can_move = can_move
+        self.active = active
+        self.lose_next_turn = lose_next_turn
+        self.player_id = player_id
+        self.status = status
         self.auto_rng = auto_rng
 
     def __eq__(self, other):
         return self.player_id == other.player_id
+
+    @staticmethod
+    def copy_from(player):
+        return Player(name=player.name, location=player.location, board=player.board, item=player.item,
+                      has_treasure=player.has_treasure, can_move=player.can_move, active=player.active,
+                      lose_next_turn=player.lose_next_turn, player_id=player.player_id, status=player.status,
+                      auto_rng=player.auto_rng)
 
     def begin_turn(self):
         if self.lose_next_turn:
@@ -83,7 +91,6 @@ class Player:
     def execute_move(self, move: Move):
         move.affect_player(self)
 
-
     def get_colliding_players(self, other_players):
         colliding_players = []
         for player in other_players:
@@ -125,7 +132,7 @@ class Player:
 
         def get_invalid_move_msg(move_choice, possible_choices):
             return f"{move_choice} is not a valid selection. " \
-                   f"Please select one of the following numbers: {possible_choices}"
+                f"Please select one of the following numbers: {possible_choices}"
 
         valid_move = False
         range_of_possible_moves = range(len(possible_moves))
@@ -228,7 +235,7 @@ class Player:
         print(f"{self.name} surprises {other_player.name}, so {self.name} has attacker's advantage.")
         if self.has_item() and self.item.type == ItemType.RUSTY_BULLET:
             prompt = f"Would you like to use your {str(self.item)} to automatically win the fight " \
-                     f"(Choose 'n' to take a chance with hand to hand combat)? (y/n): "
+                f"(Choose 'n' to take a chance with hand to hand combat)? (y/n): "
             choose_to_act = get_yes_or_no_response(prompt)
             if response_is_yes(choose_to_act):
                 print(f"{self.name} shoots and injures {other_player.name}.")
@@ -245,8 +252,9 @@ class Player:
             attacker_roll = prompt_real_dice_roll_result(self)
             defender_roll = prompt_real_dice_roll_result(other_player)
 
-        print(f"{self.name} attacks {other_player.name}. {self.name} attacks with a power level of ({attacker_roll}/6). "
-              f"{other_player.name} defends with a power level of ({defender_roll}/6).")
+        print(
+            f"{self.name} attacks {other_player.name}. {self.name} attacks with a power level of ({attacker_roll}/6). "
+            f"{other_player.name} defends with a power level of ({defender_roll}/6).")
         if attacker_roll >= defender_roll:
             print(f"{self.name} overpowers {other_player.name} and wins the fight.")
             if other_player.has_item() and other_player.item.type == ItemType.RUSTY_BULLET:
