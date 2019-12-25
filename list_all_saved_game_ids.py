@@ -20,6 +20,6 @@ if __name__ == '__main__':
             local_time_game_id_data.append([local_time, game_id])
         print(tabulate(local_time_game_id_data, headers=headers))
         print()
-        print("Run `python main.py -r <game_id>` to restore one of these games.")
+        print("Run `./restore_game <game_id>` to restore one of these games.")
     else:
         print(f"No saved games. Save directory '{GAME_BACKUP_DIR}' does not exist.")

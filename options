@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+echo "./new_game (Starts a new game)"
+echo "./list_saved_games (Lists all saved game ids)"
+echo "./restore_game <game_id> (Restores a game from its game id)"
+echo "./delete_game <game_id> (Deletes a saved game)"
+echo "./delete_all_games (Deletes all saved games)"
+echo ""
+

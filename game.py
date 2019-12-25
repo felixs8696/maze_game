@@ -215,7 +215,7 @@ class Game:
 
     def sigint_handler(self, signal_received, frame):
         print()
-        print(f"Quitting game {self.game_id}. Run `python main.py -r {self.game_id}` to restore this game")
+        print(f"Quitting game {self.game_id}. Run `./restore_game {self.game_id}` to restore this game")
         exit(0)
 
     def begin_game(self):

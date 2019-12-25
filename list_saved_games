@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+python3 list_all_saved_game_ids.py
+
