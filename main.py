@@ -124,7 +124,7 @@ if __name__ == '__main__':
         random.seed(random_seed)
         board = Board(**board_config, auto_rng=args.auto_rng)
         players = board.generate_safe_players(player_names=player_names)
-        game = Game(board=board, players=players, game_id=game_id, display_all_info_each_turn=args.omniscient)
+        game = Game(board=board, players=players, game_id=game_id, random_seed=random_seed, display_all_info_each_turn=args.omniscient)
 
         print(f"Starting game...")
         current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)
@@ -138,6 +138,7 @@ if __name__ == '__main__':
     else:
         try:
             saved_game = load_game_from_backup(game_id=args.game_id)
+            random.seed(saved_game.random_seed)
             game = Game.copy_from(game=saved_game)
         except FileNotFoundError:
             print(f"No save file found for game {args.game_id} at {get_backup_file_path(game_id=args.game_id)}.")
