@@ -206,7 +206,7 @@ class Board:
         player_locations = random.sample(self.safe_locations, k=num_players)
         players = []
         for i in range(num_players):
-            players.append(Player(initial_location=player_locations[i].copy(), name=player_names[i], board=self,
+            players.append(Player(location=player_locations[i].copy(), name=player_names[i], board=self,
                                   auto_rng=self.auto_rng))
         return players
 
