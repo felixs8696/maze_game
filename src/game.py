@@ -3,27 +3,28 @@ import random
 from typing import List
 from signal import signal, SIGINT
 
-from board import Board
-from player import Player
-from movement import Movement
-from datatypes import Direction, TileType
-from symbols import *
+from src.board import Board
+from src.player import Player
+from src.movement import Movement
+from src.datatypes import Direction, TileType
+from src.symbols import *
 from tabulate import tabulate
-from exceptions import GameOver
-from utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
+from src.exceptions import GameOver
+from src.utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
 
 
 class Game:
     def __init__(self, board: Board = None, players: List[Player] = None, randomize_player_order=True,
-                 game_id: str = '', random_seed: int = 0, display_all_info_each_turn=False):
+                 game_id: str = '', random_seed: int = 0, active_player_index: int = 0, game_over: bool = False,
+                 display_all_info_each_turn=False):
         self.board = board
         self.random_seed = random_seed
         if randomize_player_order:
             self.players = self._randomize_player_order(players)
         else:
             self.players = players
-        self.active_player_index = 0
-        self.game_over = False
+        self.active_player_index = active_player_index
+        self.game_over = game_over
         self.game_id = game_id
         self.display_all_info_each_turn = display_all_info_each_turn
 
@@ -35,7 +36,8 @@ class Game:
             player = Player.copy_from(player=old_player)
             players.append(player)
         return Game(board=board, players=players, game_id=game.game_id, randomize_player_order=False,
-                    random_seed=game.random_seed, display_all_info_each_turn=game.display_all_info_each_turn)
+                    random_seed=game.random_seed, active_player_index=game.active_player_index,
+                    game_over=game.game_over, display_all_info_each_turn=game.display_all_info_each_turn)
 
     def display_player_statuses(self):
         headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']
@@ -215,7 +217,8 @@ class Game:
 
     def sigint_handler(self, signal_received, frame):
         print()
-        print(f"Quitting game {self.game_id}. Run `./restore_game {self.game_id}` to restore this game")
+        print(f"Quitting game {self.game_id}. Run `./restore_game {self.game_id}` to restore this game. Or run "
+              f"`./restore_game_omniscient <game_id>` to restore a game in omniscient mode")
         exit(0)
 
     def begin_game(self):

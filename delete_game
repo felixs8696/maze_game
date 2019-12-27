@@ -4,5 +4,5 @@ if [ "$#" -ne 1 ]; then
     echo "Usage: ./delete_game <game_id>"
 fi
 
-python3 delete_saved_game.py -g $1
+python3 scripts/delete_saved_game.py -g $1
 

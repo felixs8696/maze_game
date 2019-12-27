@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
+echo "Command Options:"
+echo "./setup (Download required dependencies for the game. Do this if you get any '<module> not found errors.')"
 echo "./new_game (Starts a new game)"
+echo "./new_game_omniscient (Starts a new game in omniscient mode)"
 echo "./list_saved_games (Lists all saved game ids)"
 echo "./restore_game <game_id> (Restores a game from its game id)"
+echo "./restore_game_omniscient <game_id> (Restores a game from its game id in omniscient mode)"
 echo "./delete_game <game_id> (Deletes a saved game)"
 echo "./delete_all_games (Deletes all saved games)"
 echo ""

@@ -1,7 +1,7 @@
 from typing import Tuple
 
-from location import Location
-from datatypes import Direction
+from src.location import Location
+from src.datatypes import Direction
 
 class Wall:
     def __init__(self, adjacent_locations: Tuple[Location, Location]):

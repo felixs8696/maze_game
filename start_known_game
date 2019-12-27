@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./start_known_game <playable_game_index>"
+fi
+
+python3 scripts/start_game.py -i $1
+
+parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
+                                             "battle other players. Otherwise, use real dice for randomness.",
+                    action="store_true")
+parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")

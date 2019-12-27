@@ -5,11 +5,11 @@ import os
 import uuid
 import _pickle as pickle
 
-from game import Game
-from board import Board
-from constants import *
-from game_board_configs import *
-from utils import load_game_from_backup, get_backup_file_path
+from src.game import Game
+from src.board import Board
+from src.constants import *
+from src.game_board_configs import *
+from src.utils import load_game_from_backup, get_backup_file_path
 
 
 def ask_for_board_config():
@@ -98,8 +98,9 @@ if __name__ == '__main__':
 
     if args.game_id is None:
         game_id = str(uuid.uuid4())
-        print(f"Your game_id is {game_id}. Run `python main.py -r {game_id}` to "
-              f"restore your game if it crashes")
+        print(f"Your game_id is {game_id}. Run `./restore_game {game_id}` to "
+              f"restore your game if it crashes. Or  run `./restore_game_omniscient <game_id>` "
+              "to restore a game in omniscient mode")
 
         if args.playable_game_index == -1:
             random_seed = random.randint(MIN_GAME_SEED, MAX_GAME_SEED)

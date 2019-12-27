@@ -2,7 +2,7 @@ import os
 import time
 from tabulate import tabulate
 
-from constants import GAME_BACKUP_DIR
+from src.constants import GAME_BACKUP_DIR
 
 if __name__ == '__main__':
     timestamp_game_id_tuples = []
@@ -20,6 +20,7 @@ if __name__ == '__main__':
             local_time_game_id_data.append([local_time, game_id])
         print(tabulate(local_time_game_id_data, headers=headers))
         print()
-        print("Run `./restore_game <game_id>` to restore one of these games.")
+        print("Run `./restore_game <game_id>` to restore one of these games or `./restore_game_omniscient <game_id>` "
+              "to restore a game in omniscient mode")
     else:
         print(f"No saved games. Save directory '{GAME_BACKUP_DIR}' does not exist.")

@@ -3,14 +3,14 @@ import random
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
-from items import RustyBullet, FirstAidKit, PileOfJunk
-from datatypes import PortalType, Direction, BorderWallType
-from actions import AcquireTreasure, Action, DoNothing, LoseTurn, BuyItem, Heal, Teleport, Flush
-from location import Location
-from datatypes import TileType
-from symbols import *
-from exceptions import NoTreasureOnTile, InvalidDirection
-from utils import generate_dice_roll_map
+from src.items import RustyBullet, FirstAidKit, PileOfJunk
+from src.datatypes import PortalType, Direction
+from src.actions import AcquireTreasure, Action, LoseTurn, BuyItem, Heal, Teleport, Flush
+from src.location import Location
+from src.datatypes import TileType
+from src.symbols import *
+from src.exceptions import NoTreasureOnTile, InvalidDirection
+from src.utils import generate_dice_roll_map
 
 
 class Tile(ABC):
