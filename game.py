@@ -218,7 +218,7 @@ class Game:
     def sigint_handler(self, signal_received, frame):
         print()
         print(f"Quitting game {self.game_id}. Run `./restore_game {self.game_id}` to restore this game. Or run "
-              f"`./restore_game_omniscient <game_id>` to restore a game in omniscient mode")
+              f"`./restore_game_omniscient {self.game_id}` to restore a game in omniscient mode")
         exit(0)
 
     def begin_game(self):

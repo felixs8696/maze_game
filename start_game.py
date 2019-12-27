@@ -99,7 +99,7 @@ if __name__ == '__main__':
     if args.game_id is None:
         game_id = str(uuid.uuid4())
         print(f"Your game_id is {game_id}. Run `./restore_game {game_id}` to "
-              f"restore your game if it crashes. Or  run `./restore_game_omniscient <game_id>` "
+              f"restore your game if it crashes. Or  run `./restore_game_omniscient {game_id}` "
               "to restore a game in omniscient mode")
 
         if args.playable_game_index == -1:
