@@ -4,4 +4,4 @@ if [ "$#" -ne 1 ]; then
     echo "Usage: ./restore_game <game_id>"
 fi
 
-python3 start_game.py -r $1
+python3 scripts/start_game.py -r $1

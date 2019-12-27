@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-from constants import GAME_BACKUP_DIR
-from utils import delete_game_backup, get_yes_or_no_response, response_is_yes_and_not_empty
+from src.constants import GAME_BACKUP_DIR
+from src.utils import delete_game_backup, get_yes_or_no_response, response_is_yes_and_not_empty
 
 if __name__ == '__main__':
     if os.path.exists(GAME_BACKUP_DIR):

@@ -1,10 +1,10 @@
 import random
 
-from datatypes import TileType, TileCategories, Direction
-from tiles import TileFactory, Tile, Safe, PortalType
-from location import Location
-from borders import Wall, Exit
-from player import Player
+from src.datatypes import TileType, TileCategories, Direction
+from src.tiles import TileFactory, Tile, Safe, PortalType
+from src.location import Location
+from src.borders import Wall, Exit
+from src.player import Player
 
 
 class Board:

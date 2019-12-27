@@ -1,7 +1,7 @@
 import random
 
-from datatypes import Direction
-from exceptions import MoveBlockedByWall, ExitFound
+from src.datatypes import Direction
+from src.exceptions import MoveBlockedByWall, ExitFound
 
 
 class Location:

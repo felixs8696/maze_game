@@ -3,10 +3,10 @@ import numpy as np
 
 from abc import abstractmethod
 
-from move import Move
-from utils import get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
-from datatypes import Direction, MoveType, StatusType, TileType
-from location import Location
+from src.move import Move
+from src.utils import get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
+from src.datatypes import Direction, MoveType, StatusType, TileType
+from src.location import Location
 
 
 class Action(Move):

@@ -2,7 +2,7 @@ import os
 import time
 from tabulate import tabulate
 
-from constants import GAME_BACKUP_DIR
+from src.constants import GAME_BACKUP_DIR
 
 if __name__ == '__main__':
     timestamp_game_id_tuples = []
