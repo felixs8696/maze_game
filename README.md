@@ -112,17 +112,17 @@ movement, but may take any number of actions.
     * A Hospital
         * "`player` enters a HOSPITAL."
             * Heal at the expense of your next turn.
-    * Marsh
+    * A Marsh
         * "`player` sinks into a MARSH."
             * Lose your next turn.
     * A River Tile
-        Do NOT give away the direction that the player has been flushed
-        The player will end up moving 2 tiles this turn unless the river pushes them into a wall (once for the move they requested, and once from the river pushing them downstream 1 tile). 
+        * Do NOT give away the direction that the player has been flushed
+        * The player will end up moving 2 tiles this turn unless the river pushes them into a wall (once for the move they requested, and once from the river pushing them downstream 1 tile). 
         * If the next tile downstream of the river is a wall (the 2nd tile of the 2 tile move):
             * "The river tries to flush `player`, but a wall prevents him/her from moving."
         * Otherwise:
             * "`player` is flushed by the river one tile."
-    * Portal
+    * A Portal
         * Any portal: "`player` enters and exits a portal."
             * On the master board, move the adventurer marker according to what type of portal the portal is. Do NOT give away the portal type to the adventurer.
             * For the Game Master ONLY:
@@ -132,7 +132,7 @@ movement, but may take any number of actions.
                     * If the adventurer enters portal A, they exit on the portal B tile. If the adventurer enters portal B, they exit on the portal A tile.
                 * ABC (3-way)
                     * If the adventurer enters portal 1, they exit on the portal 2 tile. If the adventurer enters portal 2, they exit on the portal 3 tile. If the adventurer enters portal 3, they exit on the portal 1 tile.
-    * Treasure
+    * A Tile containing Treasure
         * "`player` also stumbles across a pile of TREASURE"
             * The player can pick up the treasure only if he/she is not injured.
             * You can only hold one treasure at a time
