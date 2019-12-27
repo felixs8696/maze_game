@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from src.constants import GAME_BACKUP_DIR
+from constants import GAME_BACKUP_DIR
 
-from src.utils import get_backup_file_path, delete_game_backup, get_yes_or_no_response, response_is_yes_and_not_empty
+from utils import get_backup_file_path, delete_game_backup, get_yes_or_no_response, response_is_yes_and_not_empty
 
 if __name__ == '__main__':
     if os.path.exists(GAME_BACKUP_DIR):

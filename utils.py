@@ -1,7 +1,7 @@
 import os
 import _pickle as pickle
 
-from src.constants import *
+from constants import *
 
 def get_yes_or_no_response(prompt):
     response = input(prompt)

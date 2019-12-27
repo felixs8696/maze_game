@@ -1,15 +1,15 @@
 import numpy as np
 import uuid
 
-from src.datatypes import StatusType, ItemType, Direction, MoveType
-from src.move import Move
-from src.movement import Movement
-from src.location import Location
-from src.utils import ask_for_options, get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
-from src.exceptions import MoveBlockedByWall, ExitFound, GameOver
-from src.actions import Fight, EndTurn, DropTreasure
+from datatypes import StatusType, ItemType, Direction, MoveType
+from move import Move
+from movement import Movement
+from location import Location
+from utils import ask_for_options, get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
+from exceptions import MoveBlockedByWall, ExitFound, GameOver
+from actions import Fight, EndTurn, DropTreasure
 
-from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
+from exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
 
 class Player:

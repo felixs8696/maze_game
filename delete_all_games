@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-python3 scripts/delete_all_saved_games.py
+python3 delete_all_saved_games.py
 

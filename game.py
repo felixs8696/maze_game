@@ -3,14 +3,14 @@ import random
 from typing import List
 from signal import signal, SIGINT
 
-from src.board import Board
-from src.player import Player
-from src.movement import Movement
-from src.datatypes import Direction, TileType
-from src.symbols import *
+from board import Board
+from player import Player
+from movement import Movement
+from datatypes import Direction, TileType
+from symbols import *
 from tabulate import tabulate
-from src.exceptions import GameOver
-from src.utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
+from exceptions import GameOver
+from utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
 
 
 class Game:

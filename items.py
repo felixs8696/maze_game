@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from src.actions import ShootBullet, Heal, DropItem
-from src.datatypes import Direction, ItemType
+from actions import ShootBullet, Heal, DropItem
+from datatypes import Direction, ItemType
 
 
 class Item(ABC):

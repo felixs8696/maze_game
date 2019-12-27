@@ -5,11 +5,11 @@ import os
 import uuid
 import _pickle as pickle
 
-from src.game import Game
-from src.board import Board
-from src.constants import *
-from src.game_board_configs import *
-from src.utils import load_game_from_backup, get_backup_file_path
+from game import Game
+from board import Board
+from constants import *
+from game_board_configs import *
+from utils import load_game_from_backup, get_backup_file_path
 
 
 def ask_for_board_config():
