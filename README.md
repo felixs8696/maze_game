@@ -83,8 +83,8 @@ movement, but may take any number of actions.
     * If you occupy the same tile as another adventurer (except for the hospital) and you are not injured you 
     may choose to attack the other player (if they are also not injured). See the "Battle" section.
 
-1. **Movement: Move once (Mandatory)
-    **The game master will tell you one of the following responses if you encounter any of the following tiles:
+1. **Movement: Move once (Mandatory)**
+   (The game master will tell you one of the following responses if you encounter any of the following tiles)
 
     * A Wall
         * "`player` cannot move `direction`. Blocked by wall."
