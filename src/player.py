@@ -120,6 +120,7 @@ class Player:
         return possible_actions
 
     def request_move(self, other_players, board, available_tile_actions) -> Move:
+        print(f"\n{self.name} may choose one of the following moves.")
         possible_movements = []
         if self.can_move:
             possible_movements = [Movement(Direction.UP), Movement(Direction.DOWN),
