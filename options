@@ -23,6 +23,7 @@ echo ""
 
 echo "./delete_saved_game <game_id> (Deletes a saved game)"
 echo "./delete_all_saved_games (Deletes all saved games)"
+echo "./delete_all_favorited_games (Deletes all favorited games)"
 echo ""
 
 echo "./list_saved_games (Lists all saved game ids)"
