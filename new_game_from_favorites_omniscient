@@ -4,4 +4,4 @@ if [ "$#" -ne 1 ]; then
     echo "Usage: ./new_game_from_favorites_omniscient <favorite_game_key>"
 fi
 
-python3 scripts/start_game.py -k $1 -o
+python3 start_game.py -k $1 -o

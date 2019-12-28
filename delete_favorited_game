@@ -4,4 +4,4 @@ if [ "$#" -ne 1 ]; then
     echo "Usage: ./delete_favorited_game <unique_key>"
 fi
 
-python3 scripts/remove_game_from_favorites.py -k $1
+python3 remove_game_from_favorites.py -k $1

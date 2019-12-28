@@ -1,10 +1,12 @@
 import random
+import timeout_decorator
 
 from src.datatypes import TileType, TileCategories, Direction
 from src.tiles import TileFactory, Tile, Safe, PortalType
 from src.location import Location
 from src.borders import Wall, Exit
 from src.player import Player
+from src.exceptions import ZeroRemainingSafeTiles
 
 
 class Board:
@@ -93,6 +95,53 @@ class Board:
         remaining_locations.remove(tile.location)
         return remaining_locations
 
+    def _assign_river_tiles(self, river_tiles, safe_locations):
+        if len(safe_locations) < len(river_tiles):
+            raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {len(river_tiles)} {TileType.RIVER.name} tiles.")
+        for river_tile in river_tiles:
+            safe_locations = self._assign_tile_to_grid(tile=river_tile, remaining_locations=safe_locations)
+        return safe_locations
+
+    def _assign_portal_tiles(self, safe_locations):
+        num_fake_portals = self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]
+        if len(safe_locations) < num_fake_portals:
+            raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {len(num_fake_portals)} fake portal tiles.")
+        for _ in range(num_fake_portals):
+            aa_portal = TileFactory.create_type_a_portal_tile(location=random.choice(list(safe_locations)))
+            safe_locations = self._assign_tile_to_grid(tile=aa_portal, remaining_locations=safe_locations)
+
+        num_ab_portal_sets = self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]
+        if len(safe_locations) < num_ab_portal_sets * 2:
+            raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {len(num_ab_portal_sets)} AB portal sets.")
+        for _ in range(num_ab_portal_sets):
+            locations = random.sample(list(safe_locations), k=2)
+            ab_portal, ba_portal = TileFactory.create_type_ab_portal_tiles(locations=locations)
+            safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
+            safe_locations = self._assign_tile_to_grid(tile=ba_portal, remaining_locations=safe_locations)
+
+        num_abc_portal_sets = self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]
+        if len(safe_locations) < num_abc_portal_sets * 3:
+            raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {len(num_abc_portal_sets)} AB portal sets.")
+        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]):
+            locations = random.sample(list(safe_locations), k=3)
+            ab_portal, bc_portal, ca_portal = TileFactory.create_type_abc_portal_tiles(locations=locations)
+            safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
+            safe_locations = self._assign_tile_to_grid(tile=bc_portal, remaining_locations=safe_locations)
+            safe_locations = self._assign_tile_to_grid(tile=ca_portal, remaining_locations=safe_locations)
+        return safe_locations
+
+    def _assign_static_tiles(self, safe_locations):
+        for tile_type, num_tiles in self.num_tiles[TileCategories.STATIC].items():
+            if len(safe_locations) < num_tiles:
+                raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {num_tiles} {tile_type.name} tiles.")
+            for _ in range(num_tiles):
+                location = random.choice(list(safe_locations))
+                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location,
+                                                             auto_rng=self.auto_rng)
+                safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
+        return safe_locations
+
+    @timeout_decorator.timeout(15)
     def generate_contents(self):
         self.grid = _create_safe_tile_matrix(width=self.width, height=self.height)
         safe_locations = set(self.grid[x][y].location for x in range(self.width) for y in range(self.height))
@@ -103,32 +152,9 @@ class Board:
             board_height=self.height,
             board_width=self.width)
 
-        for river_tile in river_tiles:
-            safe_locations = self._assign_tile_to_grid(tile=river_tile, remaining_locations=safe_locations)
-
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]):
-            aa_portal = TileFactory.create_type_a_portal_tile(location=random.choice(list(safe_locations)))
-            safe_locations = self._assign_tile_to_grid(tile=aa_portal, remaining_locations=safe_locations)
-
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]):
-            locations = random.sample(list(safe_locations), k=2)
-            ab_portal, ba_portal = TileFactory.create_type_ab_portal_tiles(locations=locations)
-            safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
-            safe_locations = self._assign_tile_to_grid(tile=ba_portal, remaining_locations=safe_locations)
-
-        for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]):
-            locations = random.sample(list(safe_locations), k=3)
-            ab_portal, bc_portal, ca_portal = TileFactory.create_type_abc_portal_tiles(locations=locations)
-            safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
-            safe_locations = self._assign_tile_to_grid(tile=bc_portal, remaining_locations=safe_locations)
-            safe_locations = self._assign_tile_to_grid(tile=ca_portal, remaining_locations=safe_locations)
-
-        for tile_type, num_tiles in self.num_tiles[TileCategories.STATIC].items():
-            for _ in range(num_tiles):
-                location = random.choice(list(safe_locations))
-                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location,
-                                                             auto_rng=self.auto_rng)
-                safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
+        safe_locations = self._assign_river_tiles(river_tiles, safe_locations)
+        safe_locations = self._assign_portal_tiles(safe_locations)
+        safe_locations = self._assign_static_tiles(safe_locations)
 
         inner_walls = set()
         river_locations = [river_tile.location for river_tile in river_tiles]
@@ -189,6 +215,8 @@ class Board:
 
     def generate_safe_players(self, player_names):
         num_players = len(player_names)
+        if num_players > len(self.safe_locations):
+            raise ZeroRemainingSafeTiles("Insufficient safe locations to spawn players on.")
         player_locations = random.sample(self.safe_locations, k=num_players)
         players = []
         for i in range(num_players):

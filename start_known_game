@@ -4,7 +4,7 @@ if [ "$#" -ne 1 ]; then
     echo "Usage: ./start_known_game <favorite_game_index>"
 fi
 
-python3 scripts/start_game.py -i $1
+python3 start_game.py -i $1
 
 parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
                                              "battle other players. Otherwise, use real dice for randomness.",

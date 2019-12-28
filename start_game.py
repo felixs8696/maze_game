@@ -4,6 +4,8 @@ import json
 import os
 import uuid
 
+from timeout_decorator.timeout_decorator import TimeoutError
+
 from src.game import Game
 from src.board import Board
 from src.constants import *
@@ -11,6 +13,7 @@ from src.utils_favorites import save_favorite_games, load_favorite_games, get_ga
     GAME_SEED, BOARD_CONFIG, NUM_PLAYERS
 from src.utils import load_game_from_backup, get_backup_file_path, save_game_backup, get_yes_or_no_response, \
     response_is_yes
+from src.exceptions import ZeroRemainingSafeTiles
 
 
 def ask_for_board_config():
@@ -135,8 +138,19 @@ if __name__ == '__main__':
         random.seed(random_seed)
         print('Generating board (This may take a while)...')
         print()
-        board = Board(**board_config, auto_rng=args.auto_rng)
-        players = board.generate_safe_players(player_names=player_names)
+        try:
+            board = Board(**board_config, auto_rng=args.auto_rng)
+        except ZeroRemainingSafeTiles as e:
+            print(f"{e}. Too many non-safe tiles assigned to the board. Please assign less non-safe tiles.")
+            exit(1)
+        except:
+            print(f"Cancelling program. Took longer than 15 seconds to generate the board. Please play with a smaller board.")
+            exit(1)
+        try:
+            players = board.generate_safe_players(player_names=player_names)
+        except ZeroRemainingSafeTiles as e:
+            print(f"{e}. Insufficient safe locations to spawn players on. Please assign less non-safe tiles.")
+            exit(1)
         game = Game(board=board, players=players, game_id=game_id, random_seed=random_seed,
                     display_all_info_each_turn=args.omniscient)
 

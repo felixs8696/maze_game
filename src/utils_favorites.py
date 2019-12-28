@@ -51,8 +51,10 @@ def save_favorite_games(favorite_games_dict, method=SaveMethod.UNDEFINED):
 
 
 def load_favorite_games():
-    with open(FAVORITE_GAMES_FILE_PATH, 'r') as f:
-        favorite_games_dict = json.load(f)
+    favorite_games_dict = {}
+    if os.path.exists(FAVORITE_GAMES_FILE_PATH):
+        with open(FAVORITE_GAMES_FILE_PATH, 'r') as f:
+            favorite_games_dict = json.load(f)
     return favorite_games_dict
 
 

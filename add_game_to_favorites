@@ -4,4 +4,4 @@ if [ "$#" -ne 2 ]; then
     echo "Usage: ./add_game_to_favorites <game_config> <unique_key>"
 fi
 
-python3 scripts/add_game_to_favorites.py -c "$1" -k $2
+python3 add_game_to_favorites.py -c "$1" -k $2
