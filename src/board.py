@@ -210,7 +210,6 @@ class Board:
                         return True
         return False
 
-
     def _generate_exits(self, river_tiles):
         exits = []
         exit_locations = random.sample(self.border_locations, k=self.num_exits)
