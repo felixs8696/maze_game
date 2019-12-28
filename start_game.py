@@ -3,6 +3,8 @@ import argparse
 import json
 import os
 import uuid
+import time
+import matplotlib.pyplot as plt
 
 from timeout_decorator.timeout_decorator import TimeoutError
 
@@ -182,23 +184,31 @@ if __name__ == '__main__':
             exit(1)
 
     game.display_all_info_each_turn = args.omniscient
+    if not args.auto_play:
+        game.run(auto_play=False)
+    else:
+        heat_map = game.original_board.get_heat_map()
+        plt.imshow(heat_map, cmap='Wistia')
+        print(f"Board movement heat map:\n{heat_map}")
+        print(f"Close heat map plot to continue.")
+        plt.show()
 
-    list_of_time_taken_in_secs = []
-    list_of_num_executed_moves = []
-    for i in range(args.num_auto_play_profile_times):
-        time_taken_in_secs, num_executed_moves = game.run(auto_play=args.auto_play,
-                                                          auto_turn_time_secs=args.auto_play_turn_time)
-        print(f"Game played: {i}")
-        print(f"Time taken to complete the game: {time_taken_in_secs} seconds.")
-        print(f"{num_executed_moves} total moves made.")
-        list_of_time_taken_in_secs.append(time_taken_in_secs)
-        list_of_num_executed_moves.append(num_executed_moves)
+        list_of_time_taken_in_secs = []
+        list_of_num_executed_moves = []
+        for i in range(args.num_auto_play_profile_times):
+            time_taken_in_secs, num_executed_moves = game.run(auto_play=args.auto_play,
+                                                              auto_turn_time_secs=args.auto_play_turn_time)
+            print(f"Game played: {i}")
+            print(f"Time taken to complete the game: {time_taken_in_secs} seconds.")
+            print(f"{num_executed_moves} total moves made.")
+            list_of_time_taken_in_secs.append(time_taken_in_secs)
+            list_of_num_executed_moves.append(num_executed_moves)
 
-        print(f"Average time taken to complete game in sec (over {i + 1} games)): "
-              f"{sum(list_of_time_taken_in_secs) / len(list_of_time_taken_in_secs)}")
-        print(f"List of times taken: {list_of_time_taken_in_secs}")
-        print(f"Average number of total moves made (over {i + 1} games): "
-              f"{sum(list_of_num_executed_moves) / len(list_of_num_executed_moves)}")
-        print(f"List of moves made: {list_of_num_executed_moves}")
+            print(f"Average time taken to complete game in sec (over {i + 1} games)): "
+                  f"{sum(list_of_time_taken_in_secs) / len(list_of_time_taken_in_secs)}")
+            print(f"List of times taken: {list_of_time_taken_in_secs}")
+            print(f"Average number of total moves made (over {i + 1} games): "
+                  f"{sum(list_of_num_executed_moves) / len(list_of_num_executed_moves)}")
+            print(f"List of moves made: {list_of_num_executed_moves}")
 
-        game.reset()
+            game.reset()

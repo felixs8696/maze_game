@@ -1,5 +1,6 @@
 import random
 import timeout_decorator
+import numpy as np
 
 from src.datatypes import TileType, TileCategories, Direction
 from src.tiles import TileFactory, Tile, Safe, PortalType
@@ -7,6 +8,7 @@ from src.location import Location
 from src.borders import Wall, Exit
 from src.player import Player
 from src.exceptions import ZeroRemainingSafeTiles
+from src.utils import create_placeholder_matrix
 
 
 class Board:
@@ -65,6 +67,27 @@ class Board:
                      inner_walls=board.inner_walls, exits=board.exits, grid=board.grid, generate_contents=False,
                      border_locations=board.border_locations, all_locations=board.all_locations,
                      safe_locations=board.safe_locations, auto_rng=board.auto_rng)
+
+    def get_heat_map(self):
+        heat_map = create_placeholder_matrix(height=self.height, width=self.width, placeholder=0)
+        for location in self.all_locations:
+            neighbors = location.neighbors(board_height=self.height, board_width=self.width)
+            for neighbor_location in neighbors:
+                if location.no_walls_block_straight_line_location(location=neighbor_location, walls=self.inner_walls,
+                                                                  board_height=self.height, board_width=self.width):
+                    resting_location = neighbor_location
+                    x, y = neighbor_location.get_coordinates()
+                    tile = self.grid[x][y]
+                    if tile.type == TileType.RIVER:
+                        resting_location = neighbor_location.next_location(direction=tile.direction)
+                        if not resting_location.in_bounds(board_height=self.height, board_width=self.width):
+                            resting_location = neighbor_location
+                    if tile.type == TileType.PORTAL:
+                        resting_location = tile.exit_location
+
+                    final_x, final_y = resting_location.get_coordinates()
+                    heat_map[final_x][final_y] += 1
+        return np.flipud(np.array(heat_map).transpose())
 
     def get_untraversable_locations_from_origin(self, inner_walls):
         queue = [self.all_locations[0]]
