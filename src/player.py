@@ -166,10 +166,25 @@ class Player:
             while invalid_move:
                 move_index = np.random.choice(range(len(possible_moves)))
                 chosen_move = possible_moves[move_index]
-                if not isinstance(chosen_move, DropTreasure):
-                    invalid_move = False
-                if not (isinstance(chosen_move, EndTurn) and self.can_move):
-                    invalid_move = False
+                invalid_move = False
+                if isinstance(chosen_move, AcquireTreasure):
+                    break
+
+                acquire_treasure_option_exists = False
+                for move in possible_moves:
+                    if isinstance(move, AcquireTreasure):
+                        acquire_treasure_option_exists = True
+                if acquire_treasure_option_exists:
+                    if not isinstance(chosen_move, AcquireTreasure):
+                        invalid_move = True
+                        continue
+                if isinstance(chosen_move, DropTreasure):
+                    invalid_move = True
+                    continue
+                if isinstance(chosen_move, EndTurn) and self.can_move:
+                    invalid_move = True
+                    continue
+
             time.sleep(auto_turn_time_secs)
             print(f"Move chosen: {move_index}")
 
