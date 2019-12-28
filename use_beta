@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-git pull
 git checkout beta
+git pull origin beta
