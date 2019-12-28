@@ -123,7 +123,6 @@ class Player:
         return possible_actions
 
     def request_move(self, other_players, board, available_tile_actions) -> Move:
-        print(f"\n{self.name} may choose one of the following moves.")
         possible_movements = []
         if self.can_move:
             possible_movements = [Movement(Direction.UP), Movement(Direction.DOWN),
@@ -140,6 +139,7 @@ class Player:
         valid_move = False
         range_of_possible_moves = range(len(possible_moves))
         while not valid_move:
+            print(f"\n{self.name} may choose one of the following moves.")
             move_index = ask_for_options(possible_moves)
             try:
                 if int(move_index) in range_of_possible_moves:

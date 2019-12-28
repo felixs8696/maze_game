@@ -141,21 +141,7 @@ class Board:
                 safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
         return safe_locations
 
-    @timeout_decorator.timeout(15)
-    def generate_contents(self):
-        self.grid = _create_safe_tile_matrix(width=self.width, height=self.height)
-        safe_locations = set(self.grid[x][y].location for x in range(self.width) for y in range(self.height))
-
-        river_tiles = TileFactory.create_full_river(
-            max_river_length=self.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
-            max_num_turns=self.river_max_num_turns,
-            board_height=self.height,
-            board_width=self.width)
-
-        safe_locations = self._assign_river_tiles(river_tiles, safe_locations)
-        safe_locations = self._assign_portal_tiles(safe_locations)
-        safe_locations = self._assign_static_tiles(safe_locations)
-
+    def _generate_inner_walls(self, river_tiles):
         inner_walls = set()
         river_locations = [river_tile.location for river_tile in river_tiles]
         while len(inner_walls) < self.num_inner_walls:
@@ -169,15 +155,55 @@ class Board:
                 location_pair = (first_loc, second_loc)
                 wall = Wall(adjacent_locations=tuple(location_pair))
                 if wall not in inner_walls:
-                    inner_walls.add(wall)
-                    valid_wall = True
-                    untraversable_walls = self.get_untraversable_locations_from_origin(list(inner_walls))
-                    if len(untraversable_walls) != 0:
-                        inner_walls.remove(wall)
+                    if any([loc == river_tiles[-1].location for loc in wall.adjacent_locations]):
                         valid_wall = False
-        self.inner_walls = tuple(inner_walls)
+                    elif any([loc == river_tiles[0].location for loc in wall.adjacent_locations]):
+                        valid_wall = False
+                    elif self._wall_forms_tunnel_next_to_river(wall, inner_walls):
+                        valid_wall = False
+                    elif len(self.get_untraversable_locations_from_origin(list(inner_walls))) != 0:
+                        valid_wall = False
+                    else:
+                        valid_wall = True
+                        inner_walls.add(wall)
 
-        self.exits = []
+        return tuple(inner_walls)
+
+    def _wall_forms_tunnel_next_to_river(self, wall, inner_walls):
+        for other_wall in inner_walls:
+            loc_a1, loc_b1 = wall.adjacent_locations
+            loc_a2, loc_b2 = other_wall.adjacent_locations
+            x_a1, y_a1 = loc_a1.get_coordinates()
+            x_b1, y_b1 = loc_b1.get_coordinates()
+            x_a2, y_a2 = loc_a2.get_coordinates()
+            x_b2, y_b2 = loc_b2.get_coordinates()
+            if x_a1 == x_b1 == x_a2 == x_b2:
+                if y_a1 == y_a2 or y_a1 == y_b2:
+                    if x_a1 - 1 >= 0 and self.grid[x_a1 - 1][y_a1].type == TileType.RIVER:
+                        return True
+                    if x_a1 + 1 < self.width and self.grid[x_a1 + 1][y_a1].type == TileType.RIVER:
+                        return True
+                if y_a2 == y_b1 or y_a2 == y_b2:
+                    if x_a1 - 1 >= 0 and self.grid[x_a1 - 1][y_a2].type == TileType.RIVER:
+                        return True
+                    if x_a1 + 1 < self.width and self.grid[x_a1 + 1][y_a2].type == TileType.RIVER:
+                        return True
+            if y_a1 == y_b1 == y_a2 == y_b2:
+                if x_a1 == x_a2 or x_a1 == x_b2:
+                    if y_a1 - 1 >= 0 and self.grid[x_a1][y_a1 - 1].type == TileType.RIVER:
+                        return True
+                    if y_a1 + 1 < self.height and self.grid[x_a1][y_a1 + 1].type == TileType.RIVER:
+                        return True
+                if x_a2 == x_b1 or x_a2 == x_b2:
+                    if y_a1 - 1 >= 0 and self.grid[x_a2][y_a1 - 1].type == TileType.RIVER:
+                        return True
+                    if y_a1 + 1 < self.height and self.grid[x_a2][y_a2 + 1].type == TileType.RIVER:
+                        return True
+        return False
+
+
+    def _generate_exits(self, river_tiles):
+        exits = []
         exit_locations = random.sample(self.border_locations, k=self.num_exits)
         while not _exit_location_compatible_with_river(exit_locations=exit_locations, river_tiles=river_tiles,
                                                        board_height=self.height, board_width=self.width):
@@ -205,8 +231,25 @@ class Board:
                 elif y == self.height - 1:
                     direction = Direction.UP
 
-            self.exits.append(Exit(location=location, direction=direction))
+            exits.append(Exit(location=location, direction=direction))
+        return exits
 
+    @timeout_decorator.timeout(15)
+    def generate_contents(self):
+        self.grid = _create_safe_tile_matrix(width=self.width, height=self.height)
+        safe_locations = set(self.grid[x][y].location for x in range(self.width) for y in range(self.height))
+
+        river_tiles = TileFactory.create_full_river(
+            max_river_length=self.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
+            max_num_turns=self.river_max_num_turns,
+            board_height=self.height,
+            board_width=self.width)
+
+        safe_locations = self._assign_river_tiles(river_tiles, safe_locations)
+        safe_locations = self._assign_portal_tiles(safe_locations)
+        safe_locations = self._assign_static_tiles(safe_locations)
+        self.inner_walls = self._generate_inner_walls(river_tiles=river_tiles)
+        self.exits = self._generate_exits(river_tiles=river_tiles)
         return random.sample(safe_locations, k=len(safe_locations))
 
     def get_tile(self, location):
@@ -233,8 +276,9 @@ def _exit_location_compatible_with_river(exit_locations, river_tiles, board_heig
     for exit_location in exit_locations:
         if exit_location in river_tile_locations:
             river_tile = loc_to_river_tile_map[exit_location]
-            if river_tile.location.next_location(direction=river_tile.direction).in_bounds(board_height=board_height,
-                                                                                           board_width=board_width):
+            if not river_tile.location.next_location(direction=river_tile.direction).in_bounds(
+                    board_height=board_height, board_width=board_width):
+                # No exits at end of river
                 return False
     return True
 
