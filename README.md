@@ -58,7 +58,7 @@ The game master will give away any information that has not been directly discov
 adventurer wants to look at the game master's logs to verify a previously uncovered observation, all adventurers must 
 unanimously agree, otherwise the information will not be revealed. After each turn, the game master will ask the 
 adventurers if they want to peek at the board. If there is ever a discrepancy, a non-player party may peek to make 
-sure the game state is playable and consistent.
+sure the game state is favorite and consistent.
 
 ### Moves
 

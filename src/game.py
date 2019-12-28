@@ -185,8 +185,7 @@ class Game:
         grid_middle_rows = self._optimize_wall_cross_sections(grid_middle_rows)
         return grid_middle_rows
 
-    def display_board(self):
-        # print(np.array([str(wall) for wall in self.board.inner_walls]))
+    def grid_strings(self):
         exit_locations = self._get_exit_locations()
         exit_loc_to_dir_map = self._get_exit_loc_to_dir_map()
 
@@ -201,6 +200,22 @@ class Game:
         grid_rows.extend(middle_rows)
         grid_rows.append(bottom_row)
         grid_rows.append(horizontal_numbered_row)
+
+        return grid_rows
+
+    def str_board(self):
+        grid_rows = self.grid_strings()
+        str_board = ""
+
+        for row in grid_rows:
+            for block in row:
+                str_board += f"{block} "
+            str_board += "\n"
+        print(str_board)
+        return str_board
+
+    def display_board(self):
+        grid_rows = self.grid_strings()
 
         for row in grid_rows:
             for block in row:

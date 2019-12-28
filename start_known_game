@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: ./start_known_game <playable_game_index>"
+    echo "Usage: ./start_known_game <favorite_game_index>"
 fi
 
 python3 scripts/start_game.py -i $1

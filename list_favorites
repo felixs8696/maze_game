@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+python3 scripts/list_favorite_games.py
+

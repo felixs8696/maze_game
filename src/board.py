@@ -94,11 +94,9 @@ class Board:
         return remaining_locations
 
     def generate_contents(self):
-        print('Generating board (This may take a while)...')
         self.grid = _create_safe_tile_matrix(width=self.width, height=self.height)
         safe_locations = set(self.grid[x][y].location for x in range(self.width) for y in range(self.height))
 
-        print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.RIVER]} river tiles...')
         river_tiles = TileFactory.create_full_river(
             max_river_length=self.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
             max_num_turns=self.river_max_num_turns,
@@ -109,22 +107,16 @@ class Board:
             safe_locations = self._assign_tile_to_grid(tile=river_tile, remaining_locations=safe_locations)
 
         for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]} '
-                  f'AA portal sets...')
             aa_portal = TileFactory.create_type_a_portal_tile(location=random.choice(list(safe_locations)))
             safe_locations = self._assign_tile_to_grid(tile=aa_portal, remaining_locations=safe_locations)
 
         for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB]} '
-                  f'AB portal sets...')
             locations = random.sample(list(safe_locations), k=2)
             ab_portal, ba_portal = TileFactory.create_type_ab_portal_tiles(locations=locations)
             safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
             safe_locations = self._assign_tile_to_grid(tile=ba_portal, remaining_locations=safe_locations)
 
         for _ in range(self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]):
-            print(f'Generating {self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC]} '
-                  f'ABC portal sets...')
             locations = random.sample(list(safe_locations), k=3)
             ab_portal, bc_portal, ca_portal = TileFactory.create_type_abc_portal_tiles(locations=locations)
             safe_locations = self._assign_tile_to_grid(tile=ab_portal, remaining_locations=safe_locations)
@@ -132,14 +124,12 @@ class Board:
             safe_locations = self._assign_tile_to_grid(tile=ca_portal, remaining_locations=safe_locations)
 
         for tile_type, num_tiles in self.num_tiles[TileCategories.STATIC].items():
-            print(f'Generating {num_tiles} {tile_type.name.lower()}{"s" if num_tiles > 1 else ""}...')
             for _ in range(num_tiles):
                 location = random.choice(list(safe_locations))
                 static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location,
                                                              auto_rng=self.auto_rng)
                 safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
 
-        print(f'Generating {self.num_inner_walls} inner walls...')
         inner_walls = set()
         river_locations = [river_tile.location for river_tile in river_tiles]
         while len(inner_walls) < self.num_inner_walls:
@@ -161,7 +151,6 @@ class Board:
                         valid_wall = False
         self.inner_walls = tuple(inner_walls)
 
-        print(f'Generating {self.num_exits} exits...')
         self.exits = []
         exit_locations = random.sample(self.border_locations, k=self.num_exits)
         while not _exit_location_compatible_with_river(exit_locations=exit_locations, river_tiles=river_tiles,
@@ -191,9 +180,6 @@ class Board:
                     direction = Direction.UP
 
             self.exits.append(Exit(location=location, direction=direction))
-
-        print('Done.')
-        print()
 
         return random.sample(safe_locations, k=len(safe_locations))
 

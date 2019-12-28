@@ -3,13 +3,14 @@ import argparse
 import json
 import os
 import uuid
-import _pickle as pickle
 
 from src.game import Game
 from src.board import Board
 from src.constants import *
-from src.game_board_configs import *
-from src.utils import load_game_from_backup, get_backup_file_path
+from src.utils_favorites import save_favorite_games, load_favorite_games, get_game_board_config, \
+    GAME_SEED, BOARD_CONFIG, NUM_PLAYERS
+from src.utils import load_game_from_backup, get_backup_file_path, save_game_backup, get_yes_or_no_response, \
+    response_is_yes
 
 
 def ask_for_board_config():
@@ -72,7 +73,7 @@ def ask_and_get_player_names():
     return player_names
 
 
-def ask_and_get_player_names_for_playable_board(num_players):
+def ask_and_get_player_names_for_favorite_board(num_players):
     print(f"This game board requires {num_players} players. Please add their names.")
     player_names = []
     while len(player_names) < num_players:
@@ -85,10 +86,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--game_id", help="Enter a game id to restore an unfinished game.", type=str,
                         default=None)
-    parser.add_argument("-i", "--playable_game_index", help="Chosen game index from playable game index.", type=int,
-                        default=-1)
-    parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the shop and "
-                                                 "battle other players. Otherwise, use real dice for randomness.",
+    parser.add_argument("-k", "--unique_key", help="Chosen unique key from available favorite game keys.", type=str,
+                        default=None)
+    parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the "
+                                                 "shop and battle other players. Otherwise, use real dice for "
+                                                 "randomness.",
                         action="store_true")
     parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")
     args = parser.parse_args()
@@ -100,9 +102,9 @@ if __name__ == '__main__':
         game_id = str(uuid.uuid4())
         print(f"Your game_id is {game_id}. Run `./restore_game {game_id}` to "
               f"restore your game if it crashes. Or  run `./restore_game_omniscient {game_id}` "
-              "to restore a game in omniscient mode")
+              "to restore a game in omniscient mode.\n")
 
-        if args.playable_game_index == -1:
+        if args.unique_key is None:
             random_seed = random.randint(MIN_GAME_SEED, MAX_GAME_SEED)
             board_config = ask_for_board_config()
             player_names = ask_and_get_player_names()
@@ -110,32 +112,41 @@ if __name__ == '__main__':
                 print(f"Not enough players. Quitting game.")
                 exit(0)
         else:
-            if args.playable_game_index >= len(PLAYABLE_GAME_BOARDS):
-                print(f"Invalid --playable_game_index. Please choose a number in this range "
-                      f"[0, {len(PLAYABLE_GAME_BOARDS) - 1}]")
+            favorite_game_boards = load_favorite_games()
+            if args.unique_key not in favorite_game_boards:
+                print(f"Invalid --unique_key. Please from one of the following game keys {favorite_game_boards.keys()}")
                 exit(0)
 
-            print(f"Loading board from valid playable_game_index ({args.playable_game_index}). "
-                  f"Ignoring all other command line arguments.")
-            chosen_board_config = PLAYABLE_GAME_BOARDS[args.playable_game_index]
+            print(f"Loading favorited game board: '{args.unique_key}'.")
+            chosen_board_config = favorite_game_boards[args.unique_key]
             random_seed = chosen_board_config[GAME_SEED]
             board_config = chosen_board_config[BOARD_CONFIG]
-            player_names = ask_and_get_player_names_for_playable_board(num_players=chosen_board_config[NUM_PLAYERS])
+
+            prompt = f"Would you like to play with the original number of players " \
+                f"({chosen_board_config[NUM_PLAYERS]}) for this favorited board? (y/n): "
+            player_with_orig_num_players = get_yes_or_no_response(prompt)
+
+            if response_is_yes(player_with_orig_num_players):
+                player_names = ask_and_get_player_names_for_favorite_board(num_players=chosen_board_config[NUM_PLAYERS])
+            else:
+                player_names = ask_and_get_player_names()
+            print()
 
         random.seed(random_seed)
+        print('Generating board (This may take a while)...')
+        print()
         board = Board(**board_config, auto_rng=args.auto_rng)
         players = board.generate_safe_players(player_names=player_names)
-        game = Game(board=board, players=players, game_id=game_id, random_seed=random_seed, display_all_info_each_turn=args.omniscient)
+        game = Game(board=board, players=players, game_id=game_id, random_seed=random_seed,
+                    display_all_info_each_turn=args.omniscient)
 
         print(f"Starting game...")
         current_game_board_config = get_game_board_config(random_seed, len(player_names), **board_config)
-        print(f"This is your game config. If you like this board and it does not already exist in the playable game "
-              f"database, please add this config to the database, so you can repeat this game: "
-              f"{json.dumps(current_game_board_config, indent=2)}")
+        print(f"This is your game config. If you like this board and you did not already add it to your favorite, "
+              f"please run `./add_game_to_favorites '{json.dumps(current_game_board_config)}' <unique_key>`"
+              f"so you can repeat this game.")
 
-        game_backup_file_path = os.path.join(GAME_BACKUP_DIR, f'{game_id}.pkl')
-        with open(game_backup_file_path, 'wb+') as f:
-            pickle.dump(game, f)
+        save_game_backup(game, game_id)
     else:
         try:
             saved_game = load_game_from_backup(game_id=args.game_id)
