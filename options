@@ -2,6 +2,9 @@
 
 echo "Command Options:"
 echo "./setup (Download required dependencies for the game. Do this if you get any '<module> not found errors.')"
+echo "./pull_updates (Pull any recently deployed game updates)')"
+echo "./use_beta (Use the beta version of the game)')"
+echo "./use_official (Use the official released version of the game)')"
 echo ""
 
 echo "./new_game (Starts a new game)"
