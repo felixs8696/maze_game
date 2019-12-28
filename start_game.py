@@ -100,6 +100,8 @@ if __name__ == '__main__':
                                                   "as random-strategy computers.", action="store_true")
     parser.add_argument("-t", "--auto_play_turn_time", help="Number of seconds each auto player should take per turn.",
                         type=int, default=1)
+    parser.add_argument("-n", "--num_auto_play_profile_times", help="Number of times to average auto play stats over",
+                        type=int, default=1)
     args = parser.parse_args()
 
     if not os.path.exists(GAME_BACKUP_DIR):
@@ -180,4 +182,23 @@ if __name__ == '__main__':
             exit(1)
 
     game.display_all_info_each_turn = args.omniscient
-    game.begin_game(auto_play=args.auto_play, auto_turn_time_secs=args.auto_play_turn_time)
+
+    list_of_time_taken_in_secs = []
+    list_of_num_executed_moves = []
+    for i in range(args.num_auto_play_profile_times):
+        time_taken_in_secs, num_executed_moves = game.run(auto_play=args.auto_play,
+                                                          auto_turn_time_secs=args.auto_play_turn_time)
+        print(f"Game played: {i}")
+        print(f"Time taken to complete the game: {time_taken_in_secs} seconds.")
+        print(f"{num_executed_moves} total moves made.")
+        list_of_time_taken_in_secs.append(time_taken_in_secs)
+        list_of_num_executed_moves.append(num_executed_moves)
+
+        print(f"Average time taken to complete game in sec (over {i + 1} games)): "
+              f"{sum(list_of_time_taken_in_secs) / len(list_of_time_taken_in_secs)}")
+        print(f"List of times taken: {list_of_time_taken_in_secs}")
+        print(f"Average number of total moves made (over {i + 1} games): "
+              f"{sum(list_of_num_executed_moves) / len(list_of_num_executed_moves)}")
+        print(f"List of moves made: {list_of_num_executed_moves}")
+
+        game.reset()

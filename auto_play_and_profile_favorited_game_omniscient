@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./auto_play_and_profile_favorited_game_omniscient <favorite_game_key> <num_times_to_profile>"
+fi
+
+python3 start_game.py -k $1 -d -a -t 0 -n $2 -o

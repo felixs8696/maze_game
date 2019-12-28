@@ -25,6 +25,7 @@ class Game:
             self.players = self._randomize_player_order(players)
         else:
             self.players = players
+        self.original_players = [Player.copy_from(player=player) for player in players]
         self.active_player_index = active_player_index
         self.game_over = game_over
         self.game_id = game_id
@@ -43,6 +44,7 @@ class Game:
 
     def reset(self):
         self.board = Board.copy_from(board=self.original_board)
+        self.players = [Player.copy_from(player=player) for player in self.original_players]
         self.random_seed = self.random_seed
         self.active_player_index = 0
         self.game_over = False
@@ -242,7 +244,7 @@ class Game:
               f"`./restore_game_omniscient {self.game_id}` to restore a game in omniscient mode")
         exit(0)
 
-    def begin_game(self, auto_play=False, auto_turn_time_secs=1):
+    def run(self, auto_play=False, auto_turn_time_secs=1):
         signal(SIGINT, self.sigint_handler)
         print()
         print('Beginning game...\n')
@@ -291,18 +293,18 @@ class Game:
                 active_player.end_turn()
                 self.next_player()
 
-                display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
-                if not self.display_all_info_each_turn:
-                    print()
-                    peek = get_yes_or_no_response(display_game_info_prompt)
-                    if response_is_yes_and_not_empty(peek):
-                        self.display_board()
-                        self.display_player_statuses()
+                if not auto_play:
+                    display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
+                    if not self.display_all_info_each_turn:
+                        print()
+                        peek = get_yes_or_no_response(display_game_info_prompt)
+                        if response_is_yes_and_not_empty(peek):
+                            self.display_board()
+                            self.display_player_statuses()
             except GameOver as e:
                 print(f"{active_player.name} has exited the maze with the treasure and won the game.")
                 self.display_board()
                 self.display_player_statuses()
                 end = time.time()
-                print(f"Time taken to complete the game: {end - start} seconds.")
-                print(f"{executed_moves} total moves made.")
-                exit(0)
+                time_taken_in_secs = end - start
+                return time_taken_in_secs, executed_moves
