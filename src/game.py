@@ -25,7 +25,10 @@ class Game:
             self.players = self._randomize_player_order(players)
         else:
             self.players = players
-        self.original_players = [Player.copy_from(player=player) for player in players]
+        if players is not None:
+            self.original_players = [Player.copy_from(player=player) for player in players]
+        else:
+            self.original_players = players
         self.active_player_index = active_player_index
         self.game_over = game_over
         self.game_id = game_id

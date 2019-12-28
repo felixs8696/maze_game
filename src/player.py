@@ -164,7 +164,7 @@ class Player:
 
             invalid_move = True
             while invalid_move:
-                move_index = random.choice(range(len(possible_moves)))
+                move_index = np.random.choice(range(len(possible_moves)))
                 chosen_move = possible_moves[move_index]
                 if not isinstance(chosen_move, DropTreasure):
                     invalid_move = False
@@ -267,7 +267,7 @@ class Player:
                 choose_to_act = get_yes_or_no_response(prompt)
                 use_bullet = response_is_yes(choose_to_act)
             else:
-                use_bullet = random.choice([True, False])
+                use_bullet = np.random.choice([True, False])
             if use_bullet:
                 print(f"{self.name} shoots and injures {other_player.name}.")
                 if other_player.has_item() and other_player.item.type == ItemType.RUSTY_BULLET:

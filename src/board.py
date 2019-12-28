@@ -284,16 +284,9 @@ class Board:
 
 def _exit_location_compatible_with_river(exit_locations, river_tiles, board_height, board_width):
     river_tile_locations = [river_tile.location for river_tile in river_tiles]
-    loc_to_river_tile_map = {}
-    for river_tile in river_tiles:
-        loc_to_river_tile_map[river_tile.location] = river_tile
     for exit_location in exit_locations:
         if exit_location in river_tile_locations:
-            river_tile = loc_to_river_tile_map[exit_location]
-            if not river_tile.location.next_location(direction=river_tile.direction).in_bounds(
-                    board_height=board_height, board_width=board_width):
-                # No exits at end of river
-                return False
+            return False
     return True
 
 
