@@ -243,7 +243,7 @@ class Game:
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
-            other_players = [player for player in self.players if not player == active_player]
+            other_players = [player for player in self.players if player != active_player]
             active_player.begin_turn()
             tile = self.board.get_tile(active_player.location)
             available_tile_actions = tile.get_optional_actions(active_player)

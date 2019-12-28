@@ -14,7 +14,7 @@ from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlread
 
 class Player:
     def __init__(self, name: str = '', location: Location = None, board=None, item=None, has_treasure=False,
-                 can_move=True, active=False, lose_next_turn=False, player_id=uuid.uuid4(), status=StatusType.HEALTHY,
+                 can_move=True, active=False, lose_next_turn=False, player_id=None, status=StatusType.HEALTHY,
                  auto_rng: bool = False):
         self.name = name
         self.location = location
@@ -24,7 +24,10 @@ class Player:
         self.can_move = can_move
         self.active = active
         self.lose_next_turn = lose_next_turn
-        self.player_id = player_id
+        if player_id is None:
+            self.player_id = uuid.uuid4()
+        else:
+            self.player_id = player_id
         self.status = status
         self.auto_rng = auto_rng
 
