@@ -161,22 +161,22 @@ class ShootBullet(Action):
             if first_player_hit is None:
                 if direction == Direction.UP:
                     if current_player.location.x == other_player.location.x and \
-                            other_player.location.y - current_player.location.x <= 3:
+                            0 < other_player.location.y - current_player.location.x <= 3:
                         shot_destination = other_player.location
                         first_player_hit = other_player
                 elif direction == Direction.DOWN:
                     if current_player.location.x == other_player.location.x and \
-                            current_player.location.x - other_player.location.y <= 3:
+                            0 < current_player.location.x - other_player.location.y <= 3:
                         shot_destination = other_player.location
                         first_player_hit = other_player
                 elif direction == Direction.LEFT:
                     if current_player.location.x - other_player.location.x <= 3 and \
-                            other_player.location.y == current_player.location.y:
+                            0 < other_player.location.y == current_player.location.y:
                         shot_destination = other_player.location
                         first_player_hit = other_player
                 elif direction == Direction.RIGHT:
                     if other_player.location.x - current_player.location.x <= 3 and \
-                            other_player.location.y == current_player.location.y:
+                            0 < other_player.location.y == current_player.location.y:
                         shot_destination = other_player.location
                         first_player_hit = other_player
                 else:
@@ -204,7 +204,7 @@ class ShootBullet(Action):
         player.lose_item()
 
     def description(self):
-        return f"Shoot up to 3 spaces in the {self.direction.name} direction."
+        return f"Shoot up to 3 spaces in the {self.direction.name} direction (not including your current location)."
 
 
 class Fight(Action):

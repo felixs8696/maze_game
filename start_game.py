@@ -129,14 +129,18 @@ if __name__ == '__main__':
             random_seed = chosen_board_config[GAME_SEED]
             board_config = chosen_board_config[BOARD_CONFIG]
 
-            prompt = f"Would you like to play with the original number of players " \
-                f"({chosen_board_config[NUM_PLAYERS]}) for this favorited board? (y/n): "
-            player_with_orig_num_players = get_yes_or_no_response(prompt)
+            if not args.auto_play:
+                prompt = f"Would you like to play with the original number of players " \
+                    f"({chosen_board_config[NUM_PLAYERS]}) for this favorited board? (y/n): "
+                player_with_orig_num_players = get_yes_or_no_response(prompt)
 
-            if response_is_yes(player_with_orig_num_players):
-                player_names = ask_and_get_player_names_for_favorite_board(num_players=chosen_board_config[NUM_PLAYERS])
+                if response_is_yes(player_with_orig_num_players):
+                    player_names = ask_and_get_player_names_for_favorite_board(
+                        num_players=chosen_board_config[NUM_PLAYERS])
+                else:
+                    player_names = ask_and_get_player_names()
             else:
-                player_names = ask_and_get_player_names()
+                player_names = [f"Player {i + 1}" for i in range(chosen_board_config[NUM_PLAYERS])]
             print()
 
         random.seed(random_seed)

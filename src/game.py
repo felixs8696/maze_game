@@ -18,6 +18,7 @@ class Game:
     def __init__(self, board: Board = None, players: List[Player] = None, randomize_player_order=True,
                  game_id: str = '', random_seed: int = 0, active_player_index: int = 0, game_over: bool = False,
                  display_all_info_each_turn=False):
+        self.original_board = Board.copy_from(board=board)
         self.board = board
         self.random_seed = random_seed
         if randomize_player_order:
@@ -39,6 +40,12 @@ class Game:
         return Game(board=board, players=players, game_id=game.game_id, randomize_player_order=False,
                     random_seed=game.random_seed, active_player_index=game.active_player_index,
                     game_over=game.game_over, display_all_info_each_turn=game.display_all_info_each_turn)
+
+    def reset(self):
+        self.board = Board.copy_from(board=self.original_board)
+        self.random_seed = self.random_seed
+        self.active_player_index = 0
+        self.game_over = False
 
     def display_player_statuses(self):
         headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']
@@ -186,7 +193,7 @@ class Game:
         grid_middle_rows = self._optimize_wall_cross_sections(grid_middle_rows)
         return grid_middle_rows
 
-    def grid_strings(self):
+    def _grid_strings(self):
         exit_locations = self._get_exit_locations()
         exit_loc_to_dir_map = self._get_exit_loc_to_dir_map()
 
@@ -205,9 +212,8 @@ class Game:
         return grid_rows
 
     def str_board(self):
-        grid_rows = self.grid_strings()
+        grid_rows = self._grid_strings()
         str_board = ""
-
         for row in grid_rows:
             for block in row:
                 str_board += f"{block} "
@@ -216,8 +222,7 @@ class Game:
         return str_board
 
     def display_board(self):
-        grid_rows = self.grid_strings()
-
+        grid_rows = self._grid_strings()
         for row in grid_rows:
             for block in row:
                 print(block, end=" ")
@@ -242,6 +247,7 @@ class Game:
         print()
         print('Beginning game...\n')
         start = time.time()
+        executed_moves = 0
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
@@ -266,6 +272,7 @@ class Game:
                                                              auto_play=auto_play,
                                                              auto_turn_time_secs=auto_turn_time_secs)
                     active_player.execute_move(chosen_move)
+                    executed_moves += 1
                     if active_player.location != original_location:
                         if isinstance(chosen_move, Movement):
                             tile = self.board.get_tile(active_player.location)
@@ -297,4 +304,5 @@ class Game:
                 self.display_player_statuses()
                 end = time.time()
                 print(f"Time taken to complete the game: {end - start} seconds.")
+                print(f"{executed_moves} total moves made.")
                 exit(0)

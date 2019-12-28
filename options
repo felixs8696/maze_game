@@ -28,3 +28,8 @@ echo ""
 echo "./list_saved_games (Lists all saved game ids)"
 echo "./list_favorites (Lists all favorited games and their ids)"
 echo ""
+
+echo "(Below this is for development purposes only.)"
+echo "./auto_play_new_game_omniscient (Auto plays an entire game with players acting and random computers)"
+echo "./auto_play_new_game_from_favorites_omniscient <favorite_game_key> (Auto plays an entire game restored from favorites with players acting and random computers)"
+echo ""

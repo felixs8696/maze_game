@@ -12,8 +12,8 @@ from src.exceptions import ZeroRemainingSafeTiles
 class Board:
     def __init__(self, height=8, width=8, river_max_num_turns=2, num_marshes=8, num_river_tiles=12, num_hospitals=1,
                  num_shops=1, num_aa_portal_sets=1, num_ab_portal_sets=1, num_abc_portal_sets=1, num_treasures=2,
-                 num_inner_walls=20, num_exits=2, inner_walls=None, exits=None, grid=None,
-                 generate_contents=True, auto_rng=False):
+                 num_inner_walls=20, num_exits=2, inner_walls=None, exits=None, grid=None, generate_contents=True,
+                 border_locations=None, all_locations=None, safe_locations=None, auto_rng=False):
         self.auto_rng = auto_rng
         self.height = height
         self.width = width
@@ -45,6 +45,10 @@ class Board:
             self.border_locations = self._get_border_locations()
             self.all_locations = [Location(x=x, y=y) for x in range(self.width) for y in range(self.height)]
             self.safe_locations = self.generate_contents()
+        else:
+            self.border_locations = border_locations
+            self.all_locations = all_locations
+            self.safe_locations = safe_locations
 
     @staticmethod
     def copy_from(board):
@@ -58,8 +62,9 @@ class Board:
                      num_abc_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC],
                      num_treasures=board.num_tiles[TileCategories.STATIC][TileType.TREASURE],
                      num_inner_walls=board.num_inner_walls, num_exits=board.num_exits,
-                     inner_walls=board.inner_walls, exits=board.exits, grid=board.grid, generate_contents=True,
-                     auto_rng=board.auto_rng)
+                     inner_walls=board.inner_walls, exits=board.exits, grid=board.grid, generate_contents=False,
+                     border_locations=board.border_locations, all_locations=board.all_locations,
+                     safe_locations=board.safe_locations, auto_rng=board.auto_rng)
 
     def get_untraversable_locations_from_origin(self, inner_walls):
         queue = [self.all_locations[0]]
@@ -155,17 +160,21 @@ class Board:
                 location_pair = (first_loc, second_loc)
                 wall = Wall(adjacent_locations=tuple(location_pair))
                 if wall not in inner_walls:
+                    valid_wall = True
+                    inner_walls.add(wall)
+
                     if any([loc == river_tiles[-1].location for loc in wall.adjacent_locations]):
                         valid_wall = False
+                        inner_walls.remove(wall)
                     elif any([loc == river_tiles[0].location for loc in wall.adjacent_locations]):
                         valid_wall = False
+                        inner_walls.remove(wall)
                     elif self._wall_forms_tunnel_next_to_river(wall, inner_walls):
                         valid_wall = False
+                        inner_walls.remove(wall)
                     elif len(self.get_untraversable_locations_from_origin(list(inner_walls))) != 0:
                         valid_wall = False
-                    else:
-                        valid_wall = True
-                        inner_walls.add(wall)
+                        inner_walls.remove(wall)
 
         return tuple(inner_walls)
 

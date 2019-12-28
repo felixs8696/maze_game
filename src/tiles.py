@@ -118,10 +118,10 @@ class Shop(Tile):
     def get_actions(self, player) -> List[Action]:
         actions = []
         if not player.has_item():
-            actions = self._actions
+            actions.extend(self._actions)
 
         if self.has_treasure():
-            actions += [AcquireTreasure()]
+            actions.extend([AcquireTreasure()])
 
         return actions
 
@@ -145,10 +145,10 @@ class Hospital(Tile):
     def get_actions(self, player) -> List[Action]:
         actions = []
         if player.is_injured():
-            actions = self._actions
+            actions.extend(self._actions)
 
         if self.has_treasure():
-            actions += [AcquireTreasure()]
+            actions.extend([AcquireTreasure()])
 
         return actions
 

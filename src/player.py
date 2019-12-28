@@ -10,7 +10,7 @@ from src.location import Location
 from src.utils import ask_for_options, display_options, get_yes_or_no_response, response_is_yes, \
     prompt_real_dice_roll_result
 from src.exceptions import MoveBlockedByWall, ExitFound, GameOver
-from src.actions import Fight, EndTurn, DropTreasure
+from src.actions import Fight, EndTurn, AcquireTreasure, DropTreasure
 
 from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
@@ -118,12 +118,17 @@ class Player:
         possible_actions = [EndTurn()]
         if self.item is not None:
             possible_actions.extend(self.item.get_actions(self, other_players, board))
-        possible_fights = self._get_possible_fights(other_players=other_players)
-        possible_actions.extend(possible_fights)
+        possible_actions.extend(self._get_possible_fights(other_players=other_players))
         possible_actions.extend(available_tile_actions)
+
         if self.has_treasure:
             possible_actions.extend([DropTreasure()])
-        return possible_actions
+
+        valid_possible_actions = []
+        for i in range(len(possible_actions)):
+            if not (self.has_treasure and isinstance(possible_actions[i], AcquireTreasure)):
+                valid_possible_actions.append(possible_actions[i])
+        return valid_possible_actions
 
     def request_move(self, other_players, board, available_tile_actions, auto_play=False, auto_turn_time_secs=1) -> Move:
         possible_movements = []
@@ -256,7 +261,6 @@ class Player:
     def fight(self, other_player, auto_play=False):
         print(f"{self.name} surprises {other_player.name}, so {self.name} has attacker's advantage.")
         if self.has_item() and self.item.type == ItemType.RUSTY_BULLET:
-            use_bullet = False
             if not auto_play:
                 prompt = f"Would you like to use your {str(self.item)} to automatically win the fight " \
                     f"(Choose 'n' to take a chance with hand to hand combat)? (y/n): "
