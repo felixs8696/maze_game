@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+python3 start_game.py -d -a -t 0 -o

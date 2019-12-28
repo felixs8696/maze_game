@@ -1,11 +1,14 @@
 import numpy as np
 import uuid
+import random
+import time
 
 from src.datatypes import StatusType, ItemType, Direction, MoveType
 from src.move import Move
 from src.movement import Movement
 from src.location import Location
-from src.utils import ask_for_options, get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
+from src.utils import ask_for_options, display_options, get_yes_or_no_response, response_is_yes, \
+    prompt_real_dice_roll_result
 from src.exceptions import MoveBlockedByWall, ExitFound, GameOver
 from src.actions import Fight, EndTurn, DropTreasure
 
@@ -122,7 +125,7 @@ class Player:
             possible_actions.extend([DropTreasure()])
         return possible_actions
 
-    def request_move(self, other_players, board, available_tile_actions) -> Move:
+    def request_move(self, other_players, board, available_tile_actions, auto_play=False, auto_turn_time_secs=1) -> Move:
         possible_movements = []
         if self.can_move:
             possible_movements = [Movement(Direction.UP), Movement(Direction.DOWN),
@@ -138,16 +141,32 @@ class Player:
 
         valid_move = False
         range_of_possible_moves = range(len(possible_moves))
-        while not valid_move:
-            print(f"\n{self.name} may choose one of the following moves.")
-            move_index = ask_for_options(possible_moves)
-            try:
-                if int(move_index) in range_of_possible_moves:
-                    valid_move = True
-                else:
+        move_index = None
+
+        if not auto_play:
+            while not valid_move:
+                print(f"\n{self.name} may choose one of the following moves.")
+                move_index = ask_for_options(possible_moves)
+                try:
+                    if int(move_index) in range_of_possible_moves:
+                        valid_move = True
+                    else:
+                        print(get_invalid_move_msg(move_index, tuple(range_of_possible_moves)))
+                except ValueError:
                     print(get_invalid_move_msg(move_index, tuple(range_of_possible_moves)))
-            except ValueError:
-                print(get_invalid_move_msg(move_index, tuple(range_of_possible_moves)))
+        else:
+            display_options(possible_moves)
+
+            invalid_move = True
+            while invalid_move:
+                move_index = random.choice(range(len(possible_moves)))
+                chosen_move = possible_moves[move_index]
+                if not isinstance(chosen_move, DropTreasure):
+                    invalid_move = False
+                if not (isinstance(chosen_move, EndTurn) and self.can_move):
+                    invalid_move = False
+            time.sleep(auto_turn_time_secs)
+            print(f"Move chosen: {move_index}")
 
         return possible_moves[int(move_index)]
 
@@ -234,13 +253,18 @@ class Player:
             article = 'an' if status.name[0].lower() in 'aeiou' else 'a'
             print(f"{self.name} has stumbled across {article} {status.name} {player.name}.")
 
-    def fight(self, other_player):
+    def fight(self, other_player, auto_play=False):
         print(f"{self.name} surprises {other_player.name}, so {self.name} has attacker's advantage.")
         if self.has_item() and self.item.type == ItemType.RUSTY_BULLET:
-            prompt = f"Would you like to use your {str(self.item)} to automatically win the fight " \
-                f"(Choose 'n' to take a chance with hand to hand combat)? (y/n): "
-            choose_to_act = get_yes_or_no_response(prompt)
-            if response_is_yes(choose_to_act):
+            use_bullet = False
+            if not auto_play:
+                prompt = f"Would you like to use your {str(self.item)} to automatically win the fight " \
+                    f"(Choose 'n' to take a chance with hand to hand combat)? (y/n): "
+                choose_to_act = get_yes_or_no_response(prompt)
+                use_bullet = response_is_yes(choose_to_act)
+            else:
+                use_bullet = random.choice([True, False])
+            if use_bullet:
                 print(f"{self.name} shoots and injures {other_player.name}.")
                 if other_player.has_item() and other_player.item.type == ItemType.RUSTY_BULLET:
                     print(f"{other_player.name} has a {str(other_player.item)}, but is taken by surprise, "

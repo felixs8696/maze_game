@@ -1,4 +1,5 @@
 import random
+import time
 
 from typing import List
 from signal import signal, SIGINT
@@ -236,10 +237,11 @@ class Game:
               f"`./restore_game_omniscient {self.game_id}` to restore a game in omniscient mode")
         exit(0)
 
-    def begin_game(self):
+    def begin_game(self, auto_play=False, auto_turn_time_secs=1):
         signal(SIGINT, self.sigint_handler)
         print()
         print('Beginning game...\n')
+        start = time.time()
 
         while not self.game_over:
             active_player = self.players[self.active_player_index]
@@ -260,7 +262,9 @@ class Game:
                     original_location = active_player.location.copy()
                     chosen_move = active_player.request_move(other_players=other_players,
                                                              board=self.board,
-                                                             available_tile_actions=available_tile_actions)
+                                                             available_tile_actions=available_tile_actions,
+                                                             auto_play=auto_play,
+                                                             auto_turn_time_secs=auto_turn_time_secs)
                     active_player.execute_move(chosen_move)
                     if active_player.location != original_location:
                         if isinstance(chosen_move, Movement):
@@ -291,4 +295,6 @@ class Game:
                 print(f"{active_player.name} has exited the maze with the treasure and won the game.")
                 self.display_board()
                 self.display_player_statuses()
+                end = time.time()
+                print(f"Time taken to complete the game: {end - start} seconds.")
                 exit(0)

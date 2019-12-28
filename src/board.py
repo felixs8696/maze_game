@@ -245,10 +245,15 @@ class Board:
             board_height=self.height,
             board_width=self.width)
 
+        print(f"Generating river")
         safe_locations = self._assign_river_tiles(river_tiles, safe_locations)
+        print(f"Generating portals")
         safe_locations = self._assign_portal_tiles(safe_locations)
+        print(f"Generating static tiles")
         safe_locations = self._assign_static_tiles(safe_locations)
+        print(f"Generating inner walls")
         self.inner_walls = self._generate_inner_walls(river_tiles=river_tiles)
+        print(f"Generating exits")
         self.exits = self._generate_exits(river_tiles=river_tiles)
         return random.sample(safe_locations, k=len(safe_locations))
 

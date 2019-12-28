@@ -91,11 +91,15 @@ if __name__ == '__main__':
                         default=None)
     parser.add_argument("-k", "--unique_key", help="Chosen unique key from available favorite game keys.", type=str,
                         default=None)
-    parser.add_argument("-a", "--auto_rng", help="Set to use a machine random number generator to get items from the "
+    parser.add_argument("-d", "--auto_rng", help="Set to use a machine random number generator to get items from the "
                                                  "shop and battle other players. Otherwise, use real dice for "
                                                  "randomness.",
                         action="store_true")
     parser.add_argument("-o", "--omniscient", help="Set this flag to see all game info each turn.", action="store_true")
+    parser.add_argument("-a", "--auto_play", help="Set this flag to have all players auto-play against each other "
+                                                  "as random-strategy computers.", action="store_true")
+    parser.add_argument("-t", "--auto_play_turn_time", help="Number of seconds each auto player should take per turn.",
+                        type=int, default=1)
     args = parser.parse_args()
 
     if not os.path.exists(GAME_BACKUP_DIR):
@@ -143,8 +147,9 @@ if __name__ == '__main__':
         except ZeroRemainingSafeTiles as e:
             print(f"{e}. Too many non-safe tiles assigned to the board. Please assign less non-safe tiles.")
             exit(1)
-        except:
-            print(f"Cancelling program. Took longer than 15 seconds to generate the board. Please play with a smaller board.")
+        except TimeoutError:
+            print(f"Cancelling program. Took longer than 15 seconds to generate the board. "
+                  f"Please play with a smaller board.")
             exit(1)
         try:
             players = board.generate_safe_players(player_names=player_names)
@@ -171,4 +176,4 @@ if __name__ == '__main__':
             exit(1)
 
     game.display_all_info_each_turn = args.omniscient
-    game.begin_game()
+    game.begin_game(auto_play=args.auto_play, auto_turn_time_secs=args.auto_play_turn_time)

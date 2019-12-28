@@ -34,26 +34,21 @@ class BuyItem(Action):
             return None
 
         print(f"Random Item Shop Catalog: {json.dumps(self.item_map, default=lambda x: str(x))}")
-        prompt = "Would you like to acquire an item from the shop? (y/n): "
-        choose_to_act = get_yes_or_no_response(prompt)
 
-        if response_is_yes(choose_to_act):
-            if self.auto_rng:
-                chosen_item = np.random.choice(self.items)
-            else:
-                chosen_item = None
-                while chosen_item is None:
-                    try:
-                        number = prompt_real_dice_roll_result(player)
-                        chosen_item = self.item_map[number]
-                    except KeyError:
-                        print(f"Invalid dice roll. The shop only has the following items: "
-                              f"{json.dumps(self.item_map, indent=2)}")
-                        print(f"Please enter a dice roll that is one of these values: {self.item_map.keys()}")
-            print(f"Thank you for your purchase!")
-            player.acquire_item(chosen_item)
+        if self.auto_rng:
+            chosen_item = np.random.choice(self.items)
         else:
-            player.do_nothing()
+            chosen_item = None
+            while chosen_item is None:
+                try:
+                    number = prompt_real_dice_roll_result(player)
+                    chosen_item = self.item_map[number]
+                except KeyError:
+                    print(f"Invalid dice roll. The shop only has the following items: "
+                          f"{json.dumps(self.item_map, indent=2)}")
+                    print(f"Please enter a dice roll that is one of these values: {self.item_map.keys()}")
+        print(f"Thank you for your purchase!")
+        player.acquire_item(chosen_item)
 
     def description(self):
         return f"Buy a randomly chosen item from the shop."
@@ -95,15 +90,9 @@ class Heal(Action):
         if not player.is_injured():
             print(f"You are already healthy.")
 
-        prompt = "Would you like to heal? (y/n): "
-        choose_to_heal = get_yes_or_no_response(prompt)
-
-        if response_is_yes(choose_to_heal):
-            if self.source == TileType.HOSPITAL:
-                player.lose_turn()
-            player.heal()
-        else:
-            player.do_nothing()
+        if self.source == TileType.HOSPITAL:
+            player.lose_turn()
+        player.heal()
 
     def description(self):
         if self.source == TileType.HOSPITAL:
@@ -220,12 +209,13 @@ class ShootBullet(Action):
 
 class Fight(Action):
 
-    def __init__(self, other_player, is_mandatory=False):
+    def __init__(self, other_player, auto_play=False, is_mandatory=False):
         super().__init__(is_mandatory)
+        self.auto_play = auto_play
         self.other_player = other_player
 
     def affect_player(self, player):
-        player.fight(self.other_player)
+        player.fight(self.other_player, auto_play=self.auto_play)
 
     def description(self):
         return f"Fight {self.other_player.name}."
