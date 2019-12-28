@@ -21,8 +21,8 @@ echo "./new_game_from_favorites_omniscient <favorite_game_key> (Start a new game
 echo "./delete_favorited_game <unique_key> (Deletes a game from the favorites list)"
 echo ""
 
-echo "./delete_game <game_id> (Deletes a saved game)"
-echo "./delete_all_games (Deletes all saved games)"
+echo "./delete_saved_game <game_id> (Deletes a saved game)"
+echo "./delete_all_saved_games (Deletes all saved games)"
 echo ""
 
 echo "./list_saved_games (Lists all saved game ids)"
