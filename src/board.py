@@ -53,7 +53,7 @@ class Board:
             self.safe_locations = safe_locations
 
     @staticmethod
-    def copy_from(board):
+    def copy_from(board, auto_rng: bool = False):
         return Board(height=board.height, width=board.width, river_max_num_turns=board.river_max_num_turns,
                      num_marshes=board.num_tiles[TileCategories.STATIC][TileType.MARSH],
                      num_river_tiles=board.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
@@ -66,7 +66,7 @@ class Board:
                      num_inner_walls=board.num_inner_walls, num_exits=board.num_exits,
                      inner_walls=board.inner_walls, exits=board.exits, grid=board.grid, generate_contents=False,
                      border_locations=board.border_locations, all_locations=board.all_locations,
-                     safe_locations=board.safe_locations, auto_rng=board.auto_rng)
+                     safe_locations=board.safe_locations, auto_rng=auto_rng)
 
     def get_heat_map(self):
         heat_map = create_placeholder_matrix(height=self.height, width=self.width, placeholder=0)
@@ -164,8 +164,7 @@ class Board:
                 raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {num_tiles} {tile_type.name} tiles.")
             for _ in range(num_tiles):
                 location = random.choice(list(safe_locations))
-                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location,
-                                                             auto_rng=self.auto_rng)
+                static_tile = TileFactory.create_static_tile(tile_type=tile_type, location=location)
                 safe_locations = self._assign_tile_to_grid(tile=static_tile, remaining_locations=safe_locations)
         return safe_locations
 
@@ -236,8 +235,7 @@ class Board:
     def _generate_exits(self, river_tiles):
         exits = []
         exit_locations = random.sample(self.border_locations, k=self.num_exits)
-        while not _exit_location_compatible_with_river(exit_locations=exit_locations, river_tiles=river_tiles,
-                                                       board_height=self.height, board_width=self.width):
+        while not _exit_location_compatible_with_river(exit_locations=exit_locations, river_tiles=river_tiles):
             exit_locations = random.sample(self.border_locations, k=self.num_exits)
         for location in exit_locations:
             x, y = location.get_coordinates()
@@ -300,11 +298,11 @@ class Board:
         players = []
         for i in range(num_players):
             players.append(Player(location=player_locations[i].copy(), name=player_names[i], board=self,
-                                  auto_rng=self.auto_rng))
+                                  acquired_item_this_turn=False, auto_rng=self.auto_rng))
         return players
 
 
-def _exit_location_compatible_with_river(exit_locations, river_tiles, board_height, board_width):
+def _exit_location_compatible_with_river(exit_locations, river_tiles):
     river_tile_locations = [river_tile.location for river_tile in river_tiles]
     for exit_location in exit_locations:
         if exit_location in river_tile_locations:

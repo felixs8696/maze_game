@@ -18,7 +18,7 @@ from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlread
 class Player:
     def __init__(self, name: str = '', location: Location = None, board=None, item=None, has_treasure=False,
                  can_move=True, active=False, lose_next_turn=False, player_id=None, status=StatusType.HEALTHY,
-                 auto_rng: bool = False):
+                 acquired_item_this_turn=False, auto_rng: bool = False):
         self.name = name
         self.location = location
         self.board = board
@@ -33,16 +33,17 @@ class Player:
             self.player_id = player_id
         self.status = status
         self.auto_rng = auto_rng
+        self.acquired_item_this_turn = acquired_item_this_turn
 
     def __eq__(self, other):
         return self.player_id == other.player_id
 
     @staticmethod
-    def copy_from(player):
+    def copy_from(player, auto_rng: bool = False):
         return Player(name=player.name, location=player.location, board=player.board, item=player.item,
                       has_treasure=player.has_treasure, can_move=player.can_move, active=player.active,
                       lose_next_turn=player.lose_next_turn, player_id=player.player_id, status=player.status,
-                      auto_rng=player.auto_rng)
+                      acquired_item_this_turn=player.acquired_item_this_turn, auto_rng=auto_rng)
 
     def begin_turn(self):
         if self.lose_next_turn:
@@ -70,6 +71,7 @@ class Player:
         if self.can_move:
             print(f"{self.name} must move at least once this turn.")
         else:
+            self.acquired_item_this_turn = False
             self.active = False
 
     def move(self, direction: Direction):
@@ -126,7 +128,7 @@ class Player:
 
         valid_possible_actions = []
         for i in range(len(possible_actions)):
-            if not (self.has_treasure and isinstance(possible_actions[i], AcquireTreasure)):
+            if not ((self.has_treasure or self.is_injured()) and isinstance(possible_actions[i], AcquireTreasure)):
                 valid_possible_actions.append(possible_actions[i])
         return valid_possible_actions
 
@@ -140,8 +142,8 @@ class Player:
                                                      available_tile_actions=available_tile_actions)
         possible_moves = possible_movements + possible_actions
 
-        def get_invalid_move_msg(move_choice, possible_choices):
-            return f"{move_choice} is not a valid selection. " \
+        def get_invalid_move_msg(name, move_choice, possible_choices):
+            return f"Sorry {name}, '{move_choice}' is not a valid selection. " \
                 f"Please select one of the following numbers: {possible_choices}"
 
         valid_move = False
@@ -150,15 +152,14 @@ class Player:
 
         if not auto_play:
             while not valid_move:
-                print(f"\n{self.name} may choose one of the following moves.")
                 move_index = ask_for_options(possible_moves)
                 try:
                     if int(move_index) in range_of_possible_moves:
                         valid_move = True
                     else:
-                        print(get_invalid_move_msg(move_index, tuple(range_of_possible_moves)))
+                        print(get_invalid_move_msg(self.name, move_index, tuple(range_of_possible_moves)))
                 except ValueError:
-                    print(get_invalid_move_msg(move_index, tuple(range_of_possible_moves)))
+                    print(get_invalid_move_msg(self.name, move_index, tuple(range_of_possible_moves)))
         else:
             display_options(possible_moves)
 
@@ -196,7 +197,10 @@ class Player:
     def acquire_treasure(self):
         x, y = self.location.get_coordinates()
         tile = self.board.grid[x][y]
+        print(f"tile.num_treasure: {tile.num_treasure}")
         assert tile.has_treasure()
+        assert not self.is_injured()
+        assert not self.has_treasure
         if not self.has_treasure:
             print(f"{self.name} has acquired a pile of treasure.")
             self.has_treasure = True
@@ -208,6 +212,7 @@ class Player:
         if not self.has_item():
             print(f"{self.name} has acquired a {str(item)}.")
             self.item = item
+            self.acquired_item_this_turn = True
         else:
             raise ItemAlreadyHeldError
 

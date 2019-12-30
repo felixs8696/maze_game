@@ -17,8 +17,9 @@ from src.utils import get_yes_or_no_response, response_is_yes_and_not_empty, sav
 class Game:
     def __init__(self, board: Board = None, players: List[Player] = None, randomize_player_order=True,
                  game_id: str = '', random_seed: int = 0, active_player_index: int = 0, game_over: bool = False,
-                 display_all_info_each_turn=False):
-        self.original_board = Board.copy_from(board=board)
+                 display_all_info_each_turn=False, auto_rng: bool = False):
+        self.auto_rng = auto_rng
+        self.original_board = Board.copy_from(board=board, auto_rng=self.auto_rng)
         self.board = board
         self.random_seed = random_seed
         if randomize_player_order:
@@ -35,18 +36,18 @@ class Game:
         self.display_all_info_each_turn = display_all_info_each_turn
 
     @staticmethod
-    def copy_from(game):
-        board = Board.copy_from(board=game.board)
+    def copy_from(game, auto_rng: bool = False):
+        board = Board.copy_from(board=game.board, auto_rng=auto_rng)
         players = []
         for old_player in game.players:
-            player = Player.copy_from(player=old_player)
+            player = Player.copy_from(player=old_player, auto_rng=auto_rng)
             players.append(player)
         return Game(board=board, players=players, game_id=game.game_id, randomize_player_order=False,
                     random_seed=game.random_seed, active_player_index=game.active_player_index,
                     game_over=game.game_over, display_all_info_each_turn=game.display_all_info_each_turn)
 
     def reset(self):
-        self.board = Board.copy_from(board=self.original_board)
+        self.board = Board.copy_from(board=self.original_board, auto_rng=self.auto_rng)
         self.players = [Player.copy_from(player=player) for player in self.original_players]
         self.random_seed = self.random_seed
         self.active_player_index = 0
@@ -260,11 +261,11 @@ class Game:
             active_player.begin_turn()
             tile = self.board.get_tile(active_player.location)
             available_tile_actions = tile.get_optional_actions(active_player)
+            save_game_backup(game=self, game_id=self.game_id)
             try:
                 while not active_player.is_turn_over(other_players=other_players,
                                                      board=self.board,
                                                      available_tile_actions=available_tile_actions):
-                    save_game_backup(game=self, game_id=self.game_id)
                     if self.display_all_info_each_turn:
                         print()
                         self.display_board()
@@ -277,6 +278,7 @@ class Game:
                                                              auto_play=auto_play,
                                                              auto_turn_time_secs=auto_turn_time_secs)
                     active_player.execute_move(chosen_move)
+                    save_game_backup(game=self, game_id=self.game_id)
                     executed_moves += 1
                     if active_player.location != original_location:
                         if isinstance(chosen_move, Movement):

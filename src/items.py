@@ -6,6 +6,9 @@ from src.datatypes import Direction, ItemType
 
 class Item(ABC):
 
+    def __init__(self):
+        self.drop_item_action = DropItem()
+
     @abstractmethod
     def __str__(self):
         pass
@@ -19,37 +22,48 @@ class RustyBullet(Item):
 
     def __init__(self):
         self.type = ItemType.RUSTY_BULLET
+        super().__init__()
 
     def __str__(self):
         return "Rusty Bullet"
 
     def get_actions(self, player, other_players, board):
-        return [DropItem(),
-                ShootBullet(direction=Direction.UP, other_players=other_players, board=board),
-                ShootBullet(direction=Direction.DOWN, other_players=other_players, board=board),
-                ShootBullet(direction=Direction.LEFT, other_players=other_players, board=board),
-                ShootBullet(direction=Direction.RIGHT, other_players=other_players, board=board)]
+        actions = [ShootBullet(direction=Direction.UP, other_players=other_players, board=board),
+                   ShootBullet(direction=Direction.DOWN, other_players=other_players, board=board),
+                   ShootBullet(direction=Direction.LEFT, other_players=other_players, board=board),
+                   ShootBullet(direction=Direction.RIGHT, other_players=other_players, board=board)]
+        if not player.acquired_item_this_turn:
+            actions.append(self.drop_item_action)
+        return actions
 
 
 class FirstAidKit(Item):
 
     def __init__(self):
         self.type = ItemType.FIRST_AID_KIT
+        super().__init__()
 
     def __str__(self):
         return "First Aid Kit"
 
     def get_actions(self, player, other_players, board):
-        return [DropItem(), Heal(source=self.type)]
+        actions = [Heal(source=self.type)]
+        if not player.acquired_item_this_turn:
+            actions.append(self.drop_item_action)
+        return actions
 
 
 class PileOfJunk(Item):
 
     def __init__(self):
         self.type = ItemType.PILE_OF_JUNK
+        super().__init__()
 
     def __str__(self):
         return "Pile of Junk"
 
     def get_actions(self, player, other_players, board):
-        return [DropItem()]
+        actions = []
+        if not player.acquired_item_this_turn:
+            actions.append(self.drop_item_action)
+        return actions

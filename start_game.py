@@ -178,7 +178,7 @@ if __name__ == '__main__':
         try:
             saved_game = load_game_from_backup(game_id=args.game_id)
             random.seed(saved_game.random_seed)
-            game = Game.copy_from(game=saved_game)
+            game = Game.copy_from(game=saved_game, auto_rng=args.auto_rng)
         except FileNotFoundError:
             print(f"No save file found for game {args.game_id} at {get_backup_file_path(game_id=args.game_id)}.")
             exit(1)

@@ -72,6 +72,8 @@ class Safe(Tile):
         print(f"{player.name} walks into a {TileType.SAFE.name} clearing.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def description(self):
         return f"You are safe."
@@ -89,6 +91,8 @@ class Marsh(Tile):
         print(f"{player.name} sinks into a {TileType.MARSH.name}.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def description(self):
         return f"You lose your next turn."
@@ -96,7 +100,7 @@ class Marsh(Tile):
 
 class Shop(Tile):
 
-    def __init__(self, location: Location, auto_rng: bool=False):
+    def __init__(self, location: Location, auto_rng: bool = False):
         super().__init__(location)
         rusty_bullet = RustyBullet()
         first_aid_kit = FirstAidKit()
@@ -106,7 +110,7 @@ class Shop(Tile):
                                                three=first_aid_kit, four=first_aid_kit,
                                                five=pile_of_junk, six=pile_of_junk)
         self.auto_rng = auto_rng
-        self._actions = [BuyItem(items=self.items, item_map=self.item_map, auto_rng=self.auto_rng)]
+        self._actions = [BuyItem(items=self.items, item_map=self.item_map)]
         self.symbol = SHOP_SYMBOL
         self.type = TileType.SHOP
 
@@ -114,6 +118,8 @@ class Shop(Tile):
         print(f"{player.name} enters a RANDOM ITEM {TileType.SHOP.name}.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def get_actions(self, player) -> List[Action]:
         actions = []
@@ -141,6 +147,8 @@ class Hospital(Tile):
         print(f"{player.name} enters a {TileType.HOSPITAL.name}.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def get_actions(self, player) -> List[Action]:
         actions = []
@@ -170,6 +178,8 @@ class Portal(Tile, ABC):
         print(f"{player.name} enters and exits a portal.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def description(self):
         return f"You have landed on a portal tile."
@@ -197,6 +207,8 @@ class River(Tile, ABC):
         print(f"{player.name} swims into the {TileType.RIVER.name}.")
         if self.has_treasure():
             print(f"{player.name} also stumbles across a pile of {TileType.TREASURE.name}")
+            if player.is_injured():
+                print(f"However, {player.name} is {player.status.name} so he/she cannot acquire the treasure.")
 
     def description(self):
         return f"You have landed on a river tile."
@@ -205,7 +217,7 @@ class River(Tile, ABC):
 class TileFactory:
 
     @staticmethod
-    def create_static_tile(tile_type: TileType, location: Location, auto_rng: bool):
+    def create_static_tile(tile_type: TileType, location: Location):
         if tile_type == TileType.SAFE:
             return Safe(location=location)
         if tile_type == TileType.MARSH:
@@ -213,7 +225,7 @@ class TileFactory:
         if tile_type == TileType.HOSPITAL:
             return Hospital(location=location)
         if tile_type == TileType.SHOP:
-            return Shop(location=location, auto_rng=auto_rng)
+            return Shop(location=location)
         if tile_type == TileType.TREASURE:
             treasure_tile = Safe(location=location)
             treasure_tile.add_treasure()

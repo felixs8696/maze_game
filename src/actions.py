@@ -22,10 +22,9 @@ class Action(Move):
 
 class BuyItem(Action):
 
-    def __init__(self, items, item_map: dict, auto_rng: bool=False, is_mandatory=False):
+    def __init__(self, items, item_map: dict, is_mandatory=False):
         super().__init__(is_mandatory)
         self.items = items
-        self.auto_rng = auto_rng
         self.item_map = item_map
 
     def affect_player(self, player):
@@ -35,7 +34,7 @@ class BuyItem(Action):
 
         print(f"Random Item Shop Catalog: {json.dumps(self.item_map, default=lambda x: str(x))}")
 
-        if self.auto_rng:
+        if player.auto_rng:
             chosen_item = np.random.choice(self.items)
         else:
             chosen_item = None
