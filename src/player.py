@@ -1,16 +1,16 @@
 import numpy as np
 import uuid
-import random
 import time
 
-from src.datatypes import StatusType, ItemType, Direction, MoveType
+from src.datatypes import StatusType, ItemType, Direction, MoveType, TileType, XPExchangeType
 from src.move import Move
 from src.movement import Movement
 from src.location import Location
 from src.utils import ask_for_options, display_options, get_yes_or_no_response, response_is_yes, \
-    prompt_real_dice_roll_result
+    prompt_real_dice_roll_result, manhattan_distance
 from src.exceptions import MoveBlockedByWall, ExitFound, GameOver
-from src.actions import Fight, EndTurn, AcquireTreasure, DropTreasure
+from src.actions import Fight, EndTurn, AcquireTreasure, DropTreasure, RevealClosestHospital, RevealClosestShop, \
+    RevealObstacle, HealInstantlyWithXP
 
 from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
@@ -18,7 +18,8 @@ from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlread
 class Player:
     def __init__(self, name: str = '', location: Location = None, board=None, item=None, has_treasure=False,
                  can_move=True, active=False, lose_next_turn=False, player_id=None, status=StatusType.HEALTHY,
-                 acquired_item_this_turn=False, auto_rng: bool = False):
+                 acquired_item_this_turn=False, xp: int = 0, tile_most_recently_encountered=None,
+                 can_request_hospital_location=True, can_request_shop_location=True, auto_rng: bool = False):
         self.name = name
         self.location = location
         self.board = board
@@ -34,16 +35,24 @@ class Player:
         self.status = status
         self.auto_rng = auto_rng
         self.acquired_item_this_turn = acquired_item_this_turn
+        self.xp = xp
+        self.tile_most_recently_encountered = tile_most_recently_encountered
+        self.xp_exchange_options = [RevealClosestHospital(), RevealClosestShop(), RevealObstacle(), HealInstantlyWithXP()]
+        self.can_request_hospital_location = can_request_hospital_location
+        self.can_request_shop_location = can_request_shop_location
 
     def __eq__(self, other):
         return self.player_id == other.player_id
 
     @staticmethod
     def copy_from(player, auto_rng: bool = False):
-        return Player(name=player.name, location=player.location, board=player.board, item=player.item,
-                      has_treasure=player.has_treasure, can_move=player.can_move, active=player.active,
-                      lose_next_turn=player.lose_next_turn, player_id=player.player_id, status=player.status,
-                      acquired_item_this_turn=player.acquired_item_this_turn, auto_rng=auto_rng)
+        return Player(name=player.name, location=player.location, board=player.board,
+                      item=player.item, has_treasure=player.has_treasure, can_move=player.can_move,
+                      active=player.active, lose_next_turn=player.lose_next_turn, player_id=player.player_id,
+                      status=player.status, acquired_item_this_turn=player.acquired_item_this_turn, xp=player.xp,
+                      tile_most_recently_encountered=player.tile_most_recently_encountered,
+                      can_request_hospital_location=player.can_request_hospital_location,
+                      can_request_shop_location=player.can_request_shop_location, auto_rng=auto_rng)
 
     def begin_turn(self):
         if self.lose_next_turn:
@@ -53,7 +62,6 @@ class Player:
             self.end_turn()
         else:
             self.active = True
-            self.can_move = True
 
     def is_turn_over(self, other_players, board, available_tile_actions):
         if not self.active:
@@ -73,6 +81,7 @@ class Player:
         else:
             self.acquired_item_this_turn = False
             self.active = False
+            self.can_move = True
 
     def move(self, direction: Direction):
         try:
@@ -116,12 +125,29 @@ class Player:
                         possible_fights.append(Fight(other_player=colliding_players[i]))
         return possible_fights
 
+    def _get_possible_xp_exchange_options(self):
+        possible_xp_exchange_options = []
+        for xp_exchange_option in self.xp_exchange_options:
+            if self.xp >= xp_exchange_option.xp_cost:
+                if xp_exchange_option.exchange_type == XPExchangeType.REVEAL_HOSPITAL and \
+                        not self.can_request_hospital_location:
+                    continue
+                if xp_exchange_option.exchange_type == XPExchangeType.REVEAL_SHOP and \
+                        not self.can_request_shop_location:
+                    continue
+                if xp_exchange_option.exchange_type == XPExchangeType.HEAL_INSTANTLY and \
+                        not self.is_injured():
+                    continue
+                possible_xp_exchange_options.append(xp_exchange_option)
+        return possible_xp_exchange_options
+
     def get_possible_actions(self, other_players, board, available_tile_actions):
         possible_actions = [EndTurn()]
         if self.item is not None:
             possible_actions.extend(self.item.get_actions(self, other_players, board))
         possible_actions.extend(self._get_possible_fights(other_players=other_players))
         possible_actions.extend(available_tile_actions)
+        possible_actions.extend(self._get_possible_xp_exchange_options())
 
         if self.has_treasure:
             possible_actions.extend([DropTreasure()])
@@ -315,3 +341,80 @@ class Player:
         else:
             print(f"{other_player.name} fights back and overcomes {self.name}.")
             self.get_injured()
+
+    def add_xp(self, amount):
+        self.xp += amount
+        print(f"{self.name} has gained {amount} XP for a total of {self.xp}.")
+
+    def spend_xp(self, amount):
+        assert amount <= self.xp
+        self.xp -= amount
+        print(f"{self.name} has spent {amount} XP and now has {self.xp} XP.")
+
+    def _reveal_closest_building(self, tile_type: TileType):
+        assert tile_type == TileType.HOSPITAL or tile_type == TileType.SHOP
+
+        tile_type_locations = []
+        for location in self.board.all_locations:
+            tile = self.board.get_tile(location=location)
+            if tile.type == tile_type:
+                tile_type_locations.append(location)
+
+        shortest_manhattan_distance = self.board.height + self.board.width
+        shortest_tile_type_location = None
+        for tile_type_location in tile_type_locations:
+            manhattan_distance_to_tile_type = manhattan_distance(self.location, tile_type_location)
+            if manhattan_distance_to_tile_type <= shortest_manhattan_distance:
+                shortest_manhattan_distance = manhattan_distance_to_tile_type
+                shortest_tile_type_location = tile_type_location
+
+        x1, y1 = self.location.get_coordinates()
+        x2, y2 = shortest_tile_type_location.get_coordinates()
+
+        x_distance = x2 - x1
+        y_distance = y2 - y1
+
+        print(f"{tile_type.name} location: {shortest_tile_type_location.get_coordinates()}")
+
+        full_distance_phrase = '0 spaces'
+        if x_distance != 0 or y_distance != 0:
+            horizontal_distance_phrase = ''
+            if x_distance < 0:
+                horizontal_distance_phrase = f'LEFT {-x_distance}'
+            elif x_distance > 0:
+                horizontal_distance_phrase = f'RIGHT {x_distance}'
+
+            conjunction = ''
+            if x_distance != 0 and y_distance != 0:
+                conjunction = ' and '
+
+            vertical_distance_phrase = ''
+            if y_distance < 0:
+                vertical_distance_phrase = f'DOWN {-y_distance}'
+            elif y_distance > 0:
+                vertical_distance_phrase = f'UP {y_distance}'
+
+            full_distance_phrase = f'{horizontal_distance_phrase}{conjunction}{vertical_distance_phrase}'
+
+        print(f"The closest {tile_type.name} to {self.name} is "
+              f"{full_distance_phrase} spaces "
+              f"from {self.name}'s current location.\n")
+
+    def reveal_closest_hospital(self):
+        self._reveal_closest_building(tile_type=TileType.HOSPITAL)
+        self.can_request_hospital_location = False
+
+    def reveal_closest_shop(self):
+        self._reveal_closest_building(tile_type=TileType.SHOP)
+        self.can_request_shop_location = False
+
+    def reveal_obstacle(self):
+        most_recent_tile = self.tile_most_recently_encountered
+        print(f"The tile {self.name} most recently encountered was a {most_recent_tile.type.name} tile.")
+        if most_recent_tile.type == TileType.PORTAL:
+            print(f"That portal was a {most_recent_tile.portal_type.name} portal.")
+        elif most_recent_tile.type == TileType.RIVER:
+            print(f"That river tile was pointing {most_recent_tile.direction.name}.")
+
+    def assign_most_recently_encountered_tile(self, tile):
+        self.tile_most_recently_encountered = tile

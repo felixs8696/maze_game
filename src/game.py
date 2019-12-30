@@ -11,7 +11,7 @@ from src.datatypes import Direction, TileType
 from src.symbols import *
 from tabulate import tabulate
 from src.exceptions import GameOver
-from src.utils import get_yes_or_no_response, response_is_yes_and_not_empty, save_game_backup
+from src.utils import ask_player_for_multiple_choice_input, save_game_backup
 
 
 class Game:
@@ -27,7 +27,7 @@ class Game:
         else:
             self.players = players
         if players is not None:
-            self.original_players = [Player.copy_from(player=player) for player in players]
+            self.original_players = [Player.copy_from(player=player, auto_rng=auto_rng) for player in players]
         else:
             self.original_players = players
         self.active_player_index = active_player_index
@@ -53,12 +53,18 @@ class Game:
         self.active_player_index = 0
         self.game_over = False
 
-    def display_player_statuses(self):
-        headers = ['Active', 'Name', 'Location', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn']
+    def display_player_statuses(self, reveal_secret_info=False):
+        headers = ['Active', 'Name', 'Status', 'Item', 'Has Treasure', 'Can Move', 'Lost Next Turn', 'XP']
+        secret_headers = ['Location']
+        if reveal_secret_info:
+            headers.extend(secret_headers)
         player_data = []
         for player in self.players:
-            data = [player.active, player.name, player.location, player.status.name, str(player.item),
-                    player.has_treasure, player.can_move, player.lose_next_turn]
+            data = [player.active, player.name, player.status.name, str(player.item), player.has_treasure,
+                    player.can_move, player.lose_next_turn, player.xp]
+            secret_data = [player.location]
+            if reveal_secret_info:
+                data.extend(secret_data)
             data = [x if x is not None else 'None' for x in data]
             player_data.append(data)
         print()
@@ -242,6 +248,22 @@ class Game:
     def next_player(self):
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
 
+    def ask_to_peek_at_game_info(self, active_player):
+        peek_options = [
+            'Show nothing, move on to next player',
+            "Check Non-secret player information: (i.e. 'Status', 'Item', 'Treasure', 'XP')",
+            'Peek at all game board and player information'
+        ]
+
+        print("\nDo you want to peek at the game state?")
+        peek_index = ask_player_for_multiple_choice_input(active_player, peek_options)
+
+        if peek_index == 1:
+            self.display_player_statuses()
+        elif peek_index == 2:
+            self.display_board()
+            self.display_player_statuses()
+
     def sigint_handler(self, signal_received, frame):
         print()
         print(f"Quitting game {self.game_id}. Run `./restore_game {self.game_id}` to restore this game. Or run "
@@ -262,6 +284,9 @@ class Game:
             tile = self.board.get_tile(active_player.location)
             available_tile_actions = tile.get_optional_actions(active_player)
             save_game_backup(game=self, game_id=self.game_id)
+            if not auto_play:
+                if not self.display_all_info_each_turn:
+                    self.ask_to_peek_at_game_info(active_player=active_player)
             try:
                 while not active_player.is_turn_over(other_players=other_players,
                                                      board=self.board,
@@ -269,7 +294,7 @@ class Game:
                     if self.display_all_info_each_turn:
                         print()
                         self.display_board()
-                        self.display_player_statuses()
+                        self.display_player_statuses(reveal_secret_info=True)
                     print(f"\n{active_player.name}'s Turn.")
                     original_location = active_player.location.copy()
                     chosen_move = active_player.request_move(other_players=other_players,
@@ -278,11 +303,11 @@ class Game:
                                                              auto_play=auto_play,
                                                              auto_turn_time_secs=auto_turn_time_secs)
                     active_player.execute_move(chosen_move)
-                    save_game_backup(game=self, game_id=self.game_id)
-                    executed_moves += 1
                     if active_player.location != original_location:
                         if isinstance(chosen_move, Movement):
+                            executed_moves += 1
                             tile = self.board.get_tile(active_player.location)
+                            active_player.assign_most_recently_encountered_tile(tile=tile)
                             tile.announce_tile(active_player)
                             if tile.type == TileType.HOSPITAL:
                                 if not active_player.is_injured():
@@ -297,16 +322,7 @@ class Game:
                     available_tile_actions = tile.get_optional_actions(active_player)
                 active_player.end_turn()
                 self.next_player()
-
-                if not auto_play:
-                    display_game_info_prompt = 'Would you like to peek at the game board? (y/n): '
-                    if not self.display_all_info_each_turn:
-                        print()
-                        peek = get_yes_or_no_response(display_game_info_prompt)
-                        if response_is_yes_and_not_empty(peek):
-                            self.display_board()
-                            self.display_player_statuses()
-            except GameOver as e:
+            except GameOver:
                 print(f"{active_player.name} has exited the maze with the treasure and won the game.")
                 self.display_board()
                 self.display_player_statuses()

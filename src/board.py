@@ -30,7 +30,7 @@ class Board:
             TileCategories.DYNAMIC: {
                 TileType.RIVER: num_river_tiles,
                 TileType.PORTAL: {
-                    PortalType.A: num_aa_portal_sets,
+                    PortalType.FAKE: num_aa_portal_sets,
                     PortalType.AB: num_ab_portal_sets,
                     PortalType.ABC: num_abc_portal_sets
                 }
@@ -59,7 +59,7 @@ class Board:
                      num_river_tiles=board.num_tiles[TileCategories.DYNAMIC][TileType.RIVER],
                      num_hospitals=board.num_tiles[TileCategories.STATIC][TileType.HOSPITAL],
                      num_shops=board.num_tiles[TileCategories.STATIC][TileType.SHOP],
-                     num_aa_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A],
+                     num_aa_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.FAKE],
                      num_ab_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.AB],
                      num_abc_portal_sets=board.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.ABC],
                      num_treasures=board.num_tiles[TileCategories.STATIC][TileType.TREASURE],
@@ -131,7 +131,7 @@ class Board:
         return safe_locations
 
     def _assign_portal_tiles(self, safe_locations):
-        num_fake_portals = self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.A]
+        num_fake_portals = self.num_tiles[TileCategories.DYNAMIC][TileType.PORTAL][PortalType.FAKE]
         if len(safe_locations) < num_fake_portals:
             raise ZeroRemainingSafeTiles(f"Not enough safe tiles remaining for {len(num_fake_portals)} fake portal tiles.")
         for _ in range(num_fake_portals):
@@ -298,7 +298,10 @@ class Board:
         players = []
         for i in range(num_players):
             players.append(Player(location=player_locations[i].copy(), name=player_names[i], board=self,
-                                  acquired_item_this_turn=False, auto_rng=self.auto_rng))
+                                  acquired_item_this_turn=False, xp=0,
+                                  tile_most_recently_encountered=self.get_tile(location=player_locations[i]),
+                                  can_request_hospital_location=True,
+                                  can_request_shop_location=True, auto_rng=self.auto_rng))
         return players
 
 

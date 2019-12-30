@@ -25,6 +25,33 @@ def response_is_no(response):
     return response in "Nn"
 
 
+def ask_player_for_multiple_choice_input(player, options):
+    for i in range(len(options)):
+        print(f"({i}) {options[i]}")
+
+    def get_invalid_move_msg(name, choice, possible_choices):
+        return f"Sorry {name}, '{choice}' is not a valid selection. " \
+            f"Please select one of the following numbers: {possible_choices}"
+
+    valid_choice = False
+    range_of_possible_choices = range(len(options))
+    index = 0
+
+    while not valid_choice:
+        index = int(input("Please choose one of the above options (Defaults to Option 0): ") or 0)
+        try:
+            if index in range_of_possible_choices:
+                valid_choice = True
+            else:
+                print(get_invalid_move_msg(player.name, index,
+                                           tuple(range_of_possible_choices)))
+        except ValueError:
+            print(
+                get_invalid_move_msg(player.name, index,
+                                     tuple(range_of_possible_choices)))
+    return index
+
+
 def display_options(objects):
     objects_options = ""
     range_of_objects = range(len(objects))
@@ -98,3 +125,9 @@ def load_game_from_backup(game_id):
     with open(game_backup_file_path, 'rb') as f:
         game = pickle.load(f)
     return game
+
+
+def manhattan_distance(loc_1, loc_2):
+    x1, y1 = loc_1.get_coordinates()
+    x2, y2 = loc_2.get_coordinates()
+    return abs(x1 - x2) + abs(y1 - y2)

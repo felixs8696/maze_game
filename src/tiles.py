@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 from src.items import RustyBullet, FirstAidKit, PileOfJunk
 from src.datatypes import PortalType, Direction
-from src.actions import AcquireTreasure, Action, LoseTurn, BuyItem, Heal, Teleport, Flush
+from src.actions import AcquireTreasure, Action, LoseTurn, BuyItem, Heal, Teleport, Flush, AddPlayerXP
 from src.location import Location
 from src.datatypes import TileType
 from src.symbols import *
@@ -20,6 +20,7 @@ class Tile(ABC):
         self._actions = []
         self.num_treasure = 0
         self.symbol = EMPTY
+        self.xp = 0
 
     def __str__(self):
         if self.has_treasure():
@@ -83,9 +84,10 @@ class Marsh(Tile):
 
     def __init__(self, location: Location):
         super().__init__(location)
-        self._actions = [LoseTurn(is_mandatory=True)]
         self.symbol = MARSH_SYMBOL
         self.type = TileType.MARSH
+        self.xp = 1
+        self._actions = [LoseTurn(is_mandatory=True), AddPlayerXP(amount=self.xp)]
 
     def announce_tile(self, player):
         print(f"{player.name} sinks into a {TileType.MARSH.name}.")
@@ -168,11 +170,12 @@ class Portal(Tile, ABC):
 
     def __init__(self, location: Location, exit_location: Location, portal_type: PortalType, name: str):
         super().__init__(location)
-        self.type = portal_type
+        self.portal_type = portal_type
         self.symbol = name
         self.exit_location = exit_location
-        self._actions = [Teleport(self.exit_location, is_mandatory=True)]
         self.type = TileType.PORTAL
+        self.xp = 2
+        self._actions = [Teleport(self.exit_location, is_mandatory=True), AddPlayerXP(amount=self.xp)]
 
     def announce_tile(self, player):
         print(f"{player.name} enters and exits a portal.")
@@ -190,7 +193,6 @@ class River(Tile, ABC):
     def __init__(self, location: Location, direction: Direction):
         super().__init__(location)
         self.direction = direction
-        self._actions = [Flush(self.direction, is_mandatory=True)]
         if self.direction == Direction.UP:
             self.symbol = RIVER_U_SYMBOL
         elif self.direction == Direction.DOWN:
@@ -202,6 +204,8 @@ class River(Tile, ABC):
         else:
             raise InvalidDirection(f"Invalid direction {direction.name} for river tile.")
         self.type = TileType.RIVER
+        self.xp = 3
+        self._actions = [Flush(self.direction, is_mandatory=True), AddPlayerXP(amount=self.xp)]
 
     def announce_tile(self, player):
         print(f"{player.name} swims into the {TileType.RIVER.name}.")
@@ -239,7 +243,7 @@ class TileFactory:
 
     @staticmethod
     def create_type_a_portal_tile(location: Location):
-        a_portal = Portal(location=location, exit_location=location, portal_type=PortalType.A, name=PORTAL_F_SYMBOL)
+        a_portal = Portal(location=location, exit_location=location, portal_type=PortalType.FAKE, name=PORTAL_F_SYMBOL)
         return a_portal
 
     @staticmethod

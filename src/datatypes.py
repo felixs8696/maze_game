@@ -20,7 +20,7 @@ class TreasureType(Enum):
 
 
 class PortalType(Enum):
-    A = 1
+    FAKE = 1
     AB = 2
     ABC = 3
 
@@ -36,6 +36,7 @@ class MoveType(Enum):
     ACTION = 1
     MOVEMENT = 2
     END_TURN = 3
+    XP_EXCHANGE = 4
 
 
 class TileCategories(Enum):
@@ -58,3 +59,10 @@ class BorderWallType(Enum):
     RIGHT = 2
     UP = 3
     DOWN = 4
+
+
+class XPExchangeType(Enum):
+    REVEAL_HOSPITAL = 1
+    REVEAL_SHOP = 2
+    REVEAL_OBSTACLE = 3
+    HEAL_INSTANTLY = 4

@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 from src.move import Move
 from src.utils import get_yes_or_no_response, response_is_yes, prompt_real_dice_roll_result
-from src.datatypes import Direction, MoveType, StatusType, TileType
+from src.datatypes import Direction, MoveType, StatusType, TileType, XPExchangeType
 from src.location import Location
 
 
@@ -233,13 +233,92 @@ class EndTurn(Action):
         return f"You end your turn."
 
 
-class DoNothing(Action):
+class AddPlayerXP(Action):
+
+    def __init__(self, amount: int = 0, is_mandatory=True):
+        super().__init__(is_mandatory)
+        self.amount = amount
 
     def affect_player(self, player):
-        player.do_nothing()
+        player.add_xp(self.amount)
 
     def description(self):
-        return f"You do nothing."
+        return f"You have been teleported by a portal."
+
+
+class XPExchange(Action):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.xp_cost = 0
+        self.move_type = MoveType.XP_EXCHANGE
+        self.exchange_type = None
+
+    @abstractmethod
+    def description(self):
+        pass
+
+
+class RevealClosestHospital(XPExchange):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.xp_cost = 3
+        self.exchange_type = XPExchangeType.REVEAL_HOSPITAL
+
+    def affect_player(self, player):
+        player.spend_xp(self.xp_cost)
+        player.reveal_closest_hospital()
+
+    def description(self):
+        return f"Spend {self.xp_cost} XP to reveal the relative location of the nearest hospital. " \
+            f"(WARNING: You can only do this during the entire game)"
+
+
+class RevealClosestShop(XPExchange):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.xp_cost = 3
+        self.exchange_type = XPExchangeType.REVEAL_SHOP
+
+    def affect_player(self, player):
+        player.spend_xp(self.xp_cost)
+        player.reveal_closest_shop()
+
+    def description(self):
+        return f"Spend {self.xp_cost} XP to reveal the relative location of the nearest shop " \
+            f"(WARNING: You can only do this during the entire game)."
+
+
+class RevealObstacle(XPExchange):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.xp_cost = 5
+        self.exchange_type = XPExchangeType.REVEAL_OBSTACLE
+
+    def affect_player(self, player):
+        player.spend_xp(self.xp_cost)
+        player.reveal_obstacle()
+
+    def description(self):
+        return f"Spend {self.xp_cost} XP to reveal all information about a tile you most recently encountered."
+
+
+class HealInstantlyWithXP(XPExchange):
+
+    def __init__(self, is_mandatory=False):
+        super().__init__(is_mandatory)
+        self.xp_cost = 7
+        self.exchange_type = XPExchangeType.HEAL_INSTANTLY
+
+    def affect_player(self, player):
+        player.spend_xp(self.xp_cost)
+        player.heal()
+
+    def description(self):
+        return f"Spend {self.xp_cost} XP to heal instantly."
 
 
 def ask_for_options(actions):
