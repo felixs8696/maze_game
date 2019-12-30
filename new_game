@@ -1,3 +1,17 @@
 #!/usr/bin/env bash
 
-python3 start_game.py
+if [ "$#" -ne 0 ] && [ "$#" -ne 1 ]; then
+    echo "Usage: './new_game' OR './new_game -d (play_with_auto_dice)'"
+fi
+
+if [ "$#" -eq 0 ]; then
+    python3 start_game.py
+fi
+
+if [ "$#" -eq 1 ]; then
+    if [ "$1" != "-d" ]; then
+        echo "Usage: './new_game' OR './new_game -d (play_with_auto_dice)'"
+    fi
+    python3 start_game.py -d
+fi
+

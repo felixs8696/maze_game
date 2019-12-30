@@ -20,17 +20,17 @@ from src.exceptions import ZeroRemainingSafeTiles
 
 def ask_for_board_config():
     print(f"Set Up Game Board")
-    board_height = int(input(f"Board height (Rec: 6-12, default=8): ") or 8)
+    board_height = int(input(f"Board height (Rec: 5-10, default=7): ") or 7)
     print(f"Chosen board height: {board_height}\n")
-    board_width = int(input(f"Board width (Rec: 6-12, default=8): ") or 8)
+    board_width = int(input(f"Board width (Rec: 5-10, default=7): ") or 7)
     print(f"Chosen board width: {board_width}\n")
     num_river_tiles = 0
     while num_river_tiles <= board_height and num_river_tiles <= board_width:
-        num_river_tiles = int(input(f"Number of River Tiles (Rec: 12-14, default=12): ") or 12)
+        num_river_tiles = int(input(f"Number of River Tiles (Rec: 8-14, default=10): ") or 10)
         if num_river_tiles <= board_height and num_river_tiles <= board_width:
             print(f"Number of river tiles must be at least as much as either the height or width of the board.")
     print(f"Chosen number of river tiles: {num_river_tiles}\n")
-    river_max_num_turns = int(input(f"Max Number of River Bends (Rec: 2-4, default=4): ") or 4)
+    river_max_num_turns = int(input(f"Max Number of River Bends (Rec: 2-4, default=2): ") or 2)
     print(f"Chosen max number of river bends: {river_max_num_turns}\n")
     num_marshes = int(input(f"Number of Marshes (Rec: 6-10, default=8): ") or 8)
     print(f"Chosen number of marshes: {num_marshes}\n")

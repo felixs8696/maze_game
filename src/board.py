@@ -1,6 +1,7 @@
 import random
 import timeout_decorator
 import numpy as np
+from typing import List
 
 from src.datatypes import TileType, TileCategories, Direction
 from src.tiles import TileFactory, Tile, Safe, PortalType
@@ -8,7 +9,7 @@ from src.location import Location
 from src.borders import Wall, Exit
 from src.player import Player
 from src.exceptions import ZeroRemainingSafeTiles
-from src.utils import create_placeholder_matrix
+from src.utils import create_placeholder_matrix, manhattan_distance
 
 
 class Board:
@@ -232,11 +233,44 @@ class Board:
                         return True
         return False
 
+    def _get_furthest_exits_from_treasure(self, river_tiles) -> List[Location]:
+        treasure_locations = []
+        for location in self.all_locations:
+            tile = self.get_tile(location=location)
+            if tile.has_treasure():
+                treasure_locations.append(location)
+
+        potential_exit_location_to_treasure_dists_map = {}
+        for potential_exit_location in self.border_locations:
+            distance_to_treasures = []
+            for treasure_location in treasure_locations:
+                distance_to_treasures.append(manhattan_distance(potential_exit_location, treasure_location))
+            potential_exit_location_to_treasure_dists_map[potential_exit_location] = tuple(distance_to_treasures)
+
+        potential_exit_locations = []
+        for potential_exit_location, treasure_distances in potential_exit_location_to_treasure_dists_map.items():
+            if min(treasure_distances) >= 3:
+                potential_exit_locations.append(potential_exit_location)
+
+        valid_exit_locations = []
+        river_tile_locations = [river_tile.location for river_tile in river_tiles]
+        for potential_exit_location in potential_exit_locations:
+            if potential_exit_location not in river_tile_locations:
+                valid_exit_locations.append(potential_exit_location)
+
+        min_manhattan_dist_between_exits = 5
+        distance_between_exits = 0
+        final_exit_locations = None
+        while final_exit_locations is None or distance_between_exits < min_manhattan_dist_between_exits:
+            final_exit_locations = random.sample(valid_exit_locations, k=self.num_exits)
+            exit_location_1, exit_location_2 = final_exit_locations
+            distance_between_exits = manhattan_distance(exit_location_1, exit_location_2)
+
+        return final_exit_locations
+
     def _generate_exits(self, river_tiles):
         exits = []
-        exit_locations = random.sample(self.border_locations, k=self.num_exits)
-        while not _exit_location_compatible_with_river(exit_locations=exit_locations, river_tiles=river_tiles):
-            exit_locations = random.sample(self.border_locations, k=self.num_exits)
+        exit_locations = self._get_furthest_exits_from_treasure(river_tiles=river_tiles)
         for location in exit_locations:
             x, y = location.get_coordinates()
             direction = None

@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: ./restore_game_omniscient <game_id>"
+if [ "$#" -ne 1 ] && [ "$#" -ne 2 ]; then
+    echo "Usage: './restore_game_omniscient <game_id>' OR './restore_game_omniscient <game_id> -d (play_with_auto_dice)'"
 fi
 
-python3 start_game.py -r $1 -o
+if [ "$#" -eq 1 ]; then
+    python3 start_game.py -r $1 -o
+fi
+
+if [ "$#" -eq 2 ]; then
+    if [ "$2" != "-d" ]; then
+        echo "Usage: './restore_game_omniscient <game_id>' OR './restore_game_omniscient <game_id> -d (play_with_auto_dice)'"
+    fi
+    python3 start_game.py -r $1 -d -o
+fi
