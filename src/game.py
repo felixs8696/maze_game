@@ -264,7 +264,7 @@ class Game:
             self.display_player_statuses()
         elif peek_index == 2:
             self.display_board()
-            self.display_player_statuses()
+            self.display_player_statuses(reveal_secret_info=True)
 
     def sigint_handler(self, signal_received, frame):
         print()
@@ -325,7 +325,7 @@ class Game:
             except GameOver:
                 print(f"{active_player.name} has exited the maze with the treasure and won the game.")
                 self.display_board()
-                self.display_player_statuses()
+                self.display_player_statuses(reveal_secret_info=True)
                 end = time.time()
                 time_taken_in_secs = end - start
                 str_start_time = time.strftime("%A, %D %B %Y, %r", time.localtime(start))
