@@ -44,7 +44,7 @@ def ask_for_board_config():
     print(f"Chosen number of AB portal sets: {num_ab_portal_sets}\n")
     num_abc_portal_sets = int(input(f"Number of ABC Portal Sets (3 portals each) (Rec: 1, default=1): ") or 1)
     print(f"Chosen number of ABC portal sets: {num_abc_portal_sets}\n")
-    num_treasures = int(input(f"Number of Treasure tiles (Rec: 2, default=2): ") or 2)
+    num_treasures = int(input(f"Number of Treasure tiles (Rec: 2, default=3): ") or 3)
     print(f"Chosen number of treasure tiles: {num_treasures}\n")
     num_inner_walls = int(input(f"Number of Inner Walls (Rec: 10-25, default=15): ") or 15)
     print(f"Chosen number of inner walls: {num_inner_walls}\n")
