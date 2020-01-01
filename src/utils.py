@@ -38,7 +38,7 @@ def ask_player_for_multiple_choice_input(player, options):
     index = 0
 
     while not valid_choice:
-        index = int(input("Please choose one of the above options (Defaults to Option 0): ") or 0)
+        index = int(input("\nPlease choose one of the above options (Defaults to Option 0): ") or 0)
         try:
             if index in range_of_possible_choices:
                 valid_choice = True

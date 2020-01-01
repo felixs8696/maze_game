@@ -204,7 +204,7 @@ class River(Tile, ABC):
         else:
             raise InvalidDirection(f"Invalid direction {direction.name} for river tile.")
         self.type = TileType.RIVER
-        self.xp = 3
+        self.xp = 2
         self._actions = [Flush(self.direction, is_mandatory=True), AddPlayerXP(amount=self.xp)]
 
     def announce_tile(self, player):

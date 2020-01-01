@@ -331,11 +331,9 @@ class Board:
         player_locations = random.sample(self.safe_locations, k=num_players)
         players = []
         for i in range(num_players):
-            players.append(Player(location=player_locations[i].copy(), name=player_names[i], board=self,
-                                  acquired_item_this_turn=False, xp=0,
+            players.append(Player(name=player_names[i], location=player_locations[i].copy(), board=self,
                                   tile_most_recently_encountered=self.get_tile(location=player_locations[i]),
-                                  can_request_hospital_location=True,
-                                  can_request_shop_location=True, auto_rng=self.auto_rng))
+                                  auto_rng=self.auto_rng))
         return players
 
 

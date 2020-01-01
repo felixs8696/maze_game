@@ -234,6 +234,7 @@ class Game:
         return str_board
 
     def display_board(self):
+        print(f"{'=' * 100}\n")
         grid_rows = self._grid_strings()
         for row in grid_rows:
             for block in row:
@@ -249,13 +250,14 @@ class Game:
         self.active_player_index = (self.active_player_index + 1) % len(self.players)
 
     def ask_to_peek_at_game_info(self, active_player):
+        print(f"\n{'=' * 100}\n")
         peek_options = [
             'Show nothing, move on to next player',
             "Check Non-secret player information: (i.e. 'Status', 'Item', 'Treasure', 'XP')",
             'Peek at all game board and player information'
         ]
 
-        print("\nDo you want to peek at the game state?")
+        print(">>> Do you want to peek at the game state? <<<")
         peek_index = ask_player_for_multiple_choice_input(active_player, peek_options)
 
         if peek_index == 1:
@@ -295,7 +297,6 @@ class Game:
                         print()
                         self.display_board()
                         self.display_player_statuses(reveal_secret_info=True)
-                    print(f"\n{active_player.name}'s Turn.")
                     original_location = active_player.location.copy()
                     chosen_move = active_player.request_move(other_players=other_players,
                                                              board=self.board,
@@ -320,7 +321,6 @@ class Game:
                             active_player.show_colliding_players(other_players=other_players)
                     tile = self.board.get_tile(active_player.location)
                     available_tile_actions = tile.get_optional_actions(active_player)
-                active_player.end_turn()
                 self.next_player()
             except GameOver:
                 print(f"{active_player.name} has exited the maze with the treasure and won the game.")
@@ -328,4 +328,11 @@ class Game:
                 self.display_player_statuses()
                 end = time.time()
                 time_taken_in_secs = end - start
+                str_start_time = time.strftime("%A, %D %B %Y, %r", time.localtime(start))
+                str_end_time = time.strftime("%A, %D %B %Y, %r", time.localtime(end))
+                str_total_time = time.strftime("%H:%M:%S", time.gmtime(time_taken_in_secs))
+                print(f"Game started on {str_start_time}")
+                print(f"Game ended on {str_end_time}")
+                print(f"Time elapsed {str_total_time}")
+                print(f"Total moves executed {executed_moves}")
                 return time_taken_in_secs, executed_moves

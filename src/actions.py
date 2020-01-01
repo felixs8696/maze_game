@@ -90,8 +90,7 @@ class Heal(Action):
             print(f"You are already healthy.")
 
         if self.source == TileType.HOSPITAL:
-            player.lose_turn()
-        player.heal()
+            player.heal_in_hospital()
 
     def description(self):
         if self.source == TileType.HOSPITAL:

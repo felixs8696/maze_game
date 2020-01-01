@@ -46,7 +46,7 @@ def ask_for_board_config():
     print(f"Chosen number of ABC portal sets: {num_abc_portal_sets}\n")
     num_treasures = int(input(f"Number of Treasure tiles (Rec: 2, default=2): ") or 2)
     print(f"Chosen number of treasure tiles: {num_treasures}\n")
-    num_inner_walls = int(input(f"Number of Inner Walls (Rec: 10-25, default=20): ") or 20)
+    num_inner_walls = int(input(f"Number of Inner Walls (Rec: 10-25, default=15): ") or 15)
     print(f"Chosen number of inner walls: {num_inner_walls}\n")
     num_exits = int(input(f"Number of Exits (Rec: 2, default=2): ") or 2)
     print(f"Chosen number of exits: {num_exits}\n")
@@ -198,7 +198,7 @@ if __name__ == '__main__':
         for i in range(args.num_auto_play_profile_times):
             time_taken_in_secs, num_executed_moves = game.run(auto_play=args.auto_play,
                                                               auto_turn_time_secs=args.auto_play_turn_time)
-            print(f"Game played: {i}")
+            print(f"Games played: {i}")
             print(f"Time taken to complete the game: {time_taken_in_secs} seconds.")
             print(f"{num_executed_moves} total moves made.")
             list_of_time_taken_in_secs.append(time_taken_in_secs)

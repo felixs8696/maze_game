@@ -10,22 +10,24 @@ from src.utils import ask_for_options, display_options, get_yes_or_no_response, 
     prompt_real_dice_roll_result, manhattan_distance
 from src.exceptions import MoveBlockedByWall, ExitFound, GameOver
 from src.actions import Fight, EndTurn, AcquireTreasure, DropTreasure, RevealClosestHospital, RevealClosestShop, \
-    RevealObstacle, HealInstantlyWithXP
+    RevealObstacle, HealInstantlyWithXP, Heal
 
 from src.exceptions import ItemAlreadyHeldError, NoItemHeldError, TreasureAlreadyHeldError, NoTreasureHeldError
 
 
 class Player:
     def __init__(self, name: str = '', location: Location = None, board=None, item=None, has_treasure=False,
-                 can_move=True, active=False, lose_next_turn=False, player_id=None, status=StatusType.HEALTHY,
-                 acquired_item_this_turn=False, xp: int = 0, tile_most_recently_encountered=None,
-                 can_request_hospital_location=True, can_request_shop_location=True, auto_rng: bool = False):
+                 can_move=True, heal_next_turn=False, active=False, lose_next_turn=False, player_id=None,
+                 status=StatusType.HEALTHY, acquired_item_this_turn=False, xp: int = 0,
+                 tile_most_recently_encountered=None, can_request_hospital_location=True,
+                 can_request_shop_location=True, auto_rng: bool = False):
         self.name = name
         self.location = location
         self.board = board
         self.item = item
         self.has_treasure = has_treasure
         self.can_move = can_move
+        self.heal_next_turn = heal_next_turn
         self.active = active
         self.lose_next_turn = lose_next_turn
         if player_id is None:
@@ -46,8 +48,8 @@ class Player:
 
     @staticmethod
     def copy_from(player, auto_rng: bool = False):
-        return Player(name=player.name, location=player.location, board=player.board,
-                      item=player.item, has_treasure=player.has_treasure, can_move=player.can_move,
+        return Player(name=player.name, location=player.location, board=player.board, item=player.item,
+                      has_treasure=player.has_treasure, can_move=player.can_move, heal_next_turn=player.heal_next_turn,
                       active=player.active, lose_next_turn=player.lose_next_turn, player_id=player.player_id,
                       status=player.status, acquired_item_this_turn=player.acquired_item_this_turn, xp=player.xp,
                       tile_most_recently_encountered=player.tile_most_recently_encountered,
@@ -55,6 +57,9 @@ class Player:
                       can_request_shop_location=player.can_request_shop_location, auto_rng=auto_rng)
 
     def begin_turn(self):
+        if self.heal_next_turn:
+            self.heal()
+            self.heal_next_turn = False
         if self.lose_next_turn:
             print(f"Sorry {self.name}, you have lost your turn.")
             self.can_move = False
@@ -73,6 +78,7 @@ class Player:
         only_end_turn_remaining = len(possible_actions) == 1 and possible_actions[0].move_type == MoveType.END_TURN
         if not self.can_move and (no_more_actions or only_end_turn_remaining):
             # print(f"{self.name}'s can't move and his/her only remaining action is to end his/her turn.")
+            self.end_turn()
             return True
 
     def end_turn(self):
@@ -146,7 +152,14 @@ class Player:
         if self.item is not None:
             possible_actions.extend(self.item.get_actions(self, other_players, board))
         possible_actions.extend(self._get_possible_fights(other_players=other_players))
-        possible_actions.extend(available_tile_actions)
+
+        valid_tile_actions = []
+        for tile_action in available_tile_actions:
+            if self.heal_next_turn and isinstance(tile_action, Heal) and tile_action.source == TileType.HOSPITAL:
+                continue
+            valid_tile_actions.append(tile_action)
+        possible_actions.extend(valid_tile_actions)
+
         possible_actions.extend(self._get_possible_xp_exchange_options())
 
         if self.has_treasure:
@@ -159,6 +172,8 @@ class Player:
         return valid_possible_actions
 
     def request_move(self, other_players, board, available_tile_actions, auto_play=False, auto_turn_time_secs=1) -> Move:
+        print(f"\n{'='*100}\n")
+        print(f"\n{self.name}'s Turn.")
         possible_movements = []
         if self.can_move:
             possible_movements = [Movement(Direction.UP), Movement(Direction.DOWN),
@@ -215,6 +230,7 @@ class Player:
             time.sleep(auto_turn_time_secs)
             print(f"Move chosen: {move_index}")
 
+        print(f"\n{'='*100}\n")
         return possible_moves[int(move_index)]
 
     def has_item(self):
@@ -282,6 +298,8 @@ class Player:
     def get_injured(self):
         print(f"{self.name} has been injured.")
         self.status = StatusType.INJURED
+        if self.has_treasure:
+            self.drop_treasure()
 
     def is_injured(self):
         return self.status == StatusType.INJURED
@@ -343,8 +361,16 @@ class Player:
             self.get_injured()
 
     def add_xp(self, amount):
-        self.xp += amount
-        print(f"{self.name} has gained {amount} XP for a total of {self.xp}.")
+        if not self.has_treasure:
+            if self.xp + amount > 7:
+                max_amount = 7 - self.xp
+                self.xp += max_amount
+                print(f"{self.name} has gained {max_amount} XP to reach the maximum of {self.xp}.")
+            else:
+                self.xp += amount
+                print(f"{self.name} has gained {amount} XP for a total of {self.xp}.")
+        else:
+            print(f"{self.name} cannot gain XP while holding treasure.")
 
     def spend_xp(self, amount):
         assert amount <= self.xp
@@ -373,8 +399,6 @@ class Player:
 
         x_distance = x2 - x1
         y_distance = y2 - y1
-
-        print(f"{tile_type.name} location: {shortest_tile_type_location.get_coordinates()}")
 
         full_distance_phrase = '0 spaces'
         if x_distance != 0 or y_distance != 0:
@@ -418,3 +442,8 @@ class Player:
 
     def assign_most_recently_encountered_tile(self, tile):
         self.tile_most_recently_encountered = tile
+
+    def heal_in_hospital(self):
+        print(f"{self.name} will heal spend his/her next turn healing.")
+        self.lose_next_turn = True
+        self.heal_next_turn = True
